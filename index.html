@@ -225,6 +225,7 @@
     const form = document.getElementById('inputForm');
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      stopQuagga();
       const data = Object.fromEntries(new FormData(form).entries());
       if (data.mulai >= data.selesai) {
         alert("Waktu selesai harus lebih besar dari waktu mulai");
@@ -289,11 +290,18 @@
           target: container,
           constraints: {
             facingMode: "environment" // kamera belakang
+          },
+          area: { // Fokus scan di tengah layar
+          top: "30%",    // dari atas 30%
+          right: "30%",  // dari kanan 30%
+          left: "30%",   // dari kiri 30%
+          bottom: "30%"  // dari bawah 30%
           }
         },
         decoder: {
-         readers: ["code_128_reader", "code_39_reader", "ean_reader"] // format barcode yang didukung
-        }
+         readers: ["code_128_reader"] // format barcode yang didukung
+        },
+        locate: true
       }, function(err) {
       if (err) {
         console.error(err);
