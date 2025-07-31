@@ -71,7 +71,7 @@
 
     .sidebar.collapsed ul li {
       justify-content: center;
-      color: #ffffff;
+      color: #1a1a2e;
     }
 
     .sidebar.collapsed .menu-text {
@@ -206,6 +206,30 @@
       border-radius: 5px;
     }
 
+    .filter-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 16px;
+      align-items: center;
+    }
+
+    .filter-input {
+      padding: 10px 14px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      flex: 1;
+      min-width: 180px;
+    }
+
+    .filter-input:focus {
+      border-color: #007bff;
+      box-shadow: 0 0 0 3px rgba(0,123,255,0.2);
+    }
+
     form button {
       background: #28a745;
       color: white;
@@ -214,6 +238,40 @@
       border-radius: 5px;
       font-size: 16px;
       cursor: pointer;
+    }
+
+    button {
+      background: linear-gradient(135deg, #007bff, #00bfff);
+      color: white;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background: linear-gradient(135deg, #0056b3, #009acd);
+      box-shadow: 0 6px 18px rgba(0, 123, 255, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .btn-cari {
+      background: #28a745;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .btn-cari:hover {
+      background: #0b5ed7;
+      transform: translateY(-1px);
     }
 
     table {
@@ -319,10 +377,28 @@
 
     <section id="tabel" class="section">
       <h2>Tabel Data Downtime</h2>
-      <input type="text" id="filterNama" placeholder="Nama Mekanik">
-      <input type="date" id="filterTanggal">
-      <input type="text" id="filterFactory" placeholder="Factory">
-      <button onclick="applyFilter()">Cari</button>
+        <input type="text" id="filterNama" placeholder="Nama Mekanik" class="filter-input">
+        <input type="date" id="filterTanggal" placeholder="Tanggal" class="filter-input">
+        <select id="filterFactory" class="filter-input">
+          <option value="">Semua Factory</option>
+          <option value="F1">F1</option>
+          <option value="F2">F2</option>
+          <option value="F3">F3</option>
+          <option value="F4">F4</option>
+          <option value="WAREHOUSE">WAREHOUSE</option>
+        </select>
+        <select id="filterArea" class="filter-input">
+          <option value="">Semua Area</option>
+          <option value="STITCHING">STITCHING</option>
+          <option value="EMBROIDERY">EMBROIDERY</option>
+          <option value="CCS">CCS</option>
+          <option value="MCC">MCC</option>
+        </select>
+      <h3>
+        <button onclick="applyFilter()" class="btn-cari">
+          🔍 Cari
+        </button>
+      </h3>
 
       <table id="dataTable">
         <thead>
@@ -547,7 +623,11 @@
       });
 
       const tbody = document.querySelector('#summaryTable tbody');
+      const container = document.getElementById("summaryTable");
+      if (!container) return;
       tbody.innerHTML = '';
+      const table = document.createElement("table");
+      table.className = "summary-table";
       Object.entries(map).forEach(([key, count]) => {
         const [tanggal, nama] = key.split('|');
         const tr = document.createElement('tr');
@@ -556,38 +636,18 @@
       });
     }
 
-    function renderTopMesinTable() {
-      const mesinPerTanggal = {};
-      allData.forEach(d => {
-        const tanggal = d.tanggal;
-        const idMesin = d.idMesin;
-        if (!mesinPerTanggal[tanggal]) mesinPerTanggal[tanggal] = {};
-        mesinPerTanggal[tanggal][idMesin] = (mesinPerTanggal[tanggal][idMesin] || 0) + 1;
-      });
-
-      const tbody = document.querySelector('#topMesinTable tbody');
-      tbody.innerHTML = '';
-      Object.entries(mesinPerTanggal).forEach(([tanggal, mesinMap]) => {
-        const top5 = Object.entries(mesinMap)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 5);
-          top5.forEach(([idMesin, count]) => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${tanggal}</td><td>${idMesin}</td><td>${count}</td>`;
-            tbody.appendChild(tr);
-          });
-        });
-    }
-
     function applyFilter() {
       const nama = document.getElementById('filterNama').value.toLowerCase();
       const tanggal = document.getElementById('filterTanggal').value;
       const Factory = document.getElementById('filterFactory').value.toUpperCase();
+      const area = document.getElementById('filterArea').value;
+
       const filtered = allData.filter(d => {
-      const mekanik = (karyawanMap[d.nik] || "").toLowerCase();
-      return (!nama || mekanik.includes(nama)) &&
-             (!tanggal || d.tanggal === tanggal) &&
-             (!Factory || d.Factory.includes(Factory));
+        const mekanik = (karyawanMap[d.nik] || "").toLowerCase();
+        return (!nama || mekanik.includes(nama)) &&
+            (!tanggal || d.tanggal === tanggal) &&
+            (!Factory || d.Factory === Factory) &&
+            (!area || d.area === area);
       });
 
       renderTable(filtered);
@@ -629,8 +689,7 @@
       renderTable();
       renderSummaryMekanik();
       renderTopIdMesin();
-      renderSummaryTable();
-      renderTopMesinTable();     
+      renderSummaryTable();     
     });
 
     window.applyFilter = applyFilter;
