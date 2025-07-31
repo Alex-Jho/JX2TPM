@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Monitoring Downtime</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      display: flex;
+    }
+
+    #toggleSidebar {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 1001;
+      background: rgba(0, 0, 0, 0.75);
+      color: white;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 20px;
+      cursor: pointer;
+      transition: left 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: none;
+    }
+
+    .sidebar.hidden + #toggleSidebar {
+      left: 15px; /* Ketika sidebar tersembunyi, tombol kembali ke kiri */
+    }
+    
+    #toggleSidebar:hover {
+      background: #16a085;
+    }
+
+    .sidebar {
+      width: 160px;
+      background-color: #1a1a2e;
+      backdrop-filter: blur(8px);
+      color: white;
+      height: 100vh;
+      position: fixed;
+      top: 0; left: 0;
+      transition: transform 0.3s ease;
+      z-index: 100;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .sidebar ul li.active {
+      background: rgba(255, 255, 255, 0.2);
+      color: #00e0ff;
+    }
+
+    .sidebar ul li.active span.bi {
+      color: #00e0ff;
+    }
+
+    .sidebar.collapsed {
+      width: 50px;
+    }
+
+    .sidebar.collapsed ul li {
+      justify-content: center;
+      color: #ffffff;
+    }
+
+    .sidebar.collapsed .menu-text {
+      display: none;
+    }
+
+    .sidebar.collapsed h2 {
+      display: none;
+    }
+
+    .sidebar.hidden {
+      transform: translateX(-100%);
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .sidebar ul li {
+      padding: 12px 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .sidebar ul li:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: #ffc107;
+    }
+
+    .sidebar .submenu {
+      padding-left: 30px;
+      font-size: 14px;
+      background: rgba(255,255,255,0.05);
+    }
+
+    .main {
+      margin-left: 160px;
+      padding: 30px;
+      flex-grow: 1;
+      padding-top: 60px;
+      transition: all 0.3s ease;
+    }
+
+    .main.expanded {
+      margin-left: 60px;
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    #summaryContent {
+      display: none;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .card-summary {
+      background: white;
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .card-summary h4 {
+      margin: 0 0 8px;
+      color: #2c3e50;
+      font-size: 16px;
+    }
+
+    .card-summary ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .card-summary ul li {
+      margin-bottom: 4px;
+      color: #555;
+    }
+
+    .card {
+      background: linear-gradient(135deg, rgba(27, 4, 233, 0.1), rgba(228, 40, 27, 0.05));
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
+      backdrop-filter: blur(6px);
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+
+    .card h4 {
+      margin: 0 0 8px;
+      color: #1e293b;
+      font-size: 18px;
+    }
+
+    .card p {
+      margin: 4px 0;
+      color: #334155;
+      font-size: 14px;
+    }
+
+    #summaryContainer, #topIdMesinContainer {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    form input, form select, form textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    form button {
+      background: #28a745;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: white;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+
+    th {
+      background: #2c3e50;
+      color: white;
+    }
+
+    canvas {
+      margin-top: 20px;
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+    }
+  </style>
+
+</head>
+<body>
+  <button id="toggleSidebar">☰</button>
+  <div class="sidebar">
+    <h2>MENU</h2>
+    <ul>
+      <li onclick="showSection('input')">
+        <span class="bi bi-pencil-square"></span>
+        <span class="menu-text">Input Data Downtime</span>
+      </li>
+      <li onclick="toggleSubmenu()">
+        <span class="bi bi-bar-chart"></span>
+        <span class="menu-text">Cek Data Downtime</span>
+      </li>
+      <ul class="submenu" id="submenu" style="display:none;">
+        <li onclick="showSection('tabel')">
+          <span class="bi bi-table"></span>
+          <span class="menu-text">Tabel</span>
+        </li>
+      <li onclick="showSection('grafik')">
+        <span class="bi bi-graph-up"></span>
+        <span class="menu-text">Grafik</span>
+      </li>
+      <li onclick="showSection('summary')">
+        <span class="bi bi-clipboard-data"></span>
+        <span class="menu-text">Summary</span>
+      </li>
+      <li onclick="showSection('topmesin')">
+        <span class="bi bi-star-fill"></span>
+        <span class="menu-text">Top ID Mesin</span>
+      </li>
+    </ul>
+  <li onclick="showSection('gaji')">
+    <span class="bi bi-cash-stack"></span>
+    <span class="menu-text">Cek Gaji Bruto</span>
+  </li>
+    </ul>
+  </div>
+
+  <div class="main">
+    <section id="input" class="section active">
+      <h2>Input Downtime</h2>
+      <form id="inputForm">
+        <input type="text" name="nik" placeholder="NIK" required pattern="\d+" inputmode="numeric">
+        <small id="nikWarning" style="color: #e74c3c; font-style: italic; display: none;">NIK tidak ditemukan di database</small>
+        <select name="Factory" required>
+          <option value="">Pilih Factory</option>
+          <option value="F1">F1</option>
+          <option value="F2">F2</option>
+          <option value="F3">F3</option>
+          <option value="F4">F4</option>
+          <option value="WAREHOUSE">WAREHOUSE</option>
+        </select>
+        <select name="area" required>
+          <option value="">Pilih Area</option>
+          <option value="STITCHING">STITCHING</option>
+          <option value="EMBROIDERY">EMBROIDERY</option>
+          <option value="CCS">CCS</option>
+          <option value="MCC">MCC</option>
+        </select>
+        <input type="text" name="idMesin" placeholder="ID Mesin" required>
+        <textarea name="masalah" placeholder="Masalah" required></textarea>
+        <textarea name="tindakan" placeholder="Tindakan" required></textarea>
+        <input type="text" name="sparepart" placeholder="Sparepart" required>
+        <select name="keterangan" required>
+          <option value="">Pilih Keterangan</option>
+          <option value="PERBAIKAN DI TEMPAT">PERBAIKAN DI TEMPAT</option>
+          <option value="GANTI MESIN">GANTI MESIN</option>
+        </select>
+        <input type="time" name="mulai" required>
+        <input type="time" name="selesai" required>
+        <button type="submit">Kirim</button>
+      </form>
+    </section>
+
+    <section id="tabel" class="section">
+      <h2>Tabel Data Downtime</h2>
+      <input type="text" id="filterNama" placeholder="Nama Mekanik">
+      <input type="date" id="filterTanggal">
+      <input type="text" id="filterFactory" placeholder="Factory">
+      <button onclick="applyFilter()">Cari</button>
+
+      <table id="dataTable">
+        <thead>
+          <tr>
+            <th>Tanggal</th>
+            <th>NIK</th>
+            <th>Mekanik</th>
+            <th>Factory</th>
+            <th>Area</th>
+            <th>ID Mesin</th>
+            <th>Masalah</th>
+            <th>Tindakan</th>
+            <th>Mulai</th>
+            <th>Selesai</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section id="grafik" class="section">
+      <h2>Grafik Data Downtime</h2>
+      <canvas id="chart" height="120"></canvas>
+      <div id="summaryContent"></div>
+    </section>
+
+    <section id="summary" class="section">
+      <h2>Summary Input Downtime</h2>
+      <div id="summaryContainer"></div>
+    </section>
+
+    <section id="topmesin" class="section">
+      <h2 style="margin-top:40px;">Top 5 ID Mesin</h2>
+      <div id="topIdMesinContainer"></div>
+    </section>
+
+    <section id="gaji" class="section">
+      <h2>Fitur Cek Gaji Bruto (Dalam Pengembangan)</h2>
+      <p>Fitur ini akan segera tersedia.</p>
+    </section>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+    import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDut3AnvIY81bzkZT8vTRVrU5-9zXIJSFo",
+      authDomain: "tpm-utility.firebaseapp.com",
+      databaseURL: "https://tpm-utility-default-rtdb.firebaseio.com",
+      projectId: "tpm-utility",
+      storageBucket: "tpm-utility.appspot.com",
+      messagingSenderId: "467156319343",
+      appId: "1:467156319343:web:baf3048911971bb07ca19a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const form = document.getElementById('inputForm');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(form).entries());
+      const nikCleaned = data.nik.replace(/^0+/, ""); // hapus nol di depan
+      if (!karyawanMap[nikCleaned]) {
+        alert("NIK tidak ditemukan di database!");
+        return;
+      }
+
+      data.nik = nikCleaned;
+      data.nik = String(Number(data.nik));
+
+      if (data.mulai >= data.selesai) {
+        alert("Waktu selesai harus lebih besar dari waktu mulai");
+        return;
+      }
+      const today = new Date();
+      const tanggalLocal = today.toLocaleDateString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit' })
+      .split('/')
+      .reverse()
+      .join('-');
+      data.tanggal = tanggalLocal;
+      data.timestamp = Date.now();
+      await push(ref(db, "downtime"), data);
+      alert("Data berhasil dikirim");
+      form.reset();
+    });
+
+    const allData = [];
+    const tableBody = document.querySelector("#dataTable tbody");
+
+    function renderTable(data = allData) {
+      tableBody.innerHTML = "";
+      let filtered = data;
+
+      let areaMap = {};
+      filtered.forEach(row => {
+        areaMap[row.area] = (areaMap[row.area] || 0) + 1;
+        const mekanik = karyawanMap[row.nik] || "Unknown";
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${row.tanggal}</td>
+          <td>${row.nik}</td>
+          <td>${mekanik}</td>
+          <td>${row.Factory}</td>
+          <td>${row.area}</td>
+          <td>${row.idMesin}</td>
+          <td>${row.masalah}</td>
+          <td>${row.tindakan}</td>
+          <td>${row.mulai}</td>
+          <td>${row.selesai}</td>
+        `;
+        tableBody.appendChild(tr);
+      });
+      renderChart(areaMap);
+      renderSummary(filtered);
+    }
+
+    function renderSummaryMekanik() {
+      const summaryContainer = document.getElementById("summaryContainer");
+      summaryContainer.innerHTML = "";
+
+      const grouped = {};
+      allData.forEach(item => {
+        const nama = karyawanMap[item.nik] || "Unknown";
+        const key = `${nama}_${item.tanggal}`;
+        grouped[key] = (grouped[key] || 0) + 1;
+      });
+
+      Object.entries(grouped).forEach(([key, count]) => {
+        const [nama, tanggal] = key.split("_");
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+        <h4>${nama}</h4>
+        <p><strong>Tanggal:</strong> ${tanggal}</p>
+        <p><strong>Jumlah Input:</strong> ${count}</p>
+        `;
+        summaryContainer.appendChild(card);
+      });
+    }
+
+    function renderTopIdMesin() {
+      const container = document.getElementById("topIdMesinContainer");
+      container.innerHTML = "";
+
+      const grouped = {};
+
+      allData.forEach(item => {
+        const tanggal = item.tanggal;
+        if (!grouped[tanggal]) grouped[tanggal] = {};
+        grouped[tanggal][item.idMesin] = (grouped[tanggal][item.idMesin] || 0) + 1;
+      });
+
+      Object.entries(grouped).forEach(([tanggal, mesinMap]) => {
+        const sorted = Object.entries(mesinMap)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5);
+
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `<h4>Top 5 ID Mesin - ${tanggal}</h4>` + sorted.map(([id, count]) =>
+        `<p><strong>${id}</strong>: ${count}x</p>`).join("");
+        container.appendChild(card);
+      });
+    }
+
+    let chart;
+    function renderChart(areaMap) {
+      const ctx = document.getElementById("chart").getContext("2d");
+      if (chart) chart.destroy();
+      chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(areaMap),
+          datasets: [{
+            label: 'Jumlah Downtime per Area',
+            data: Object.values(areaMap),
+            backgroundColor: '#dc3545'
+          }]
+        }
+      });
+    }
+
+    function renderSummary(filtered) {
+      const summaryDiv = document.getElementById("summaryContent");
+      summaryDiv.innerHTML = "";
+
+      const mekanikSummary = {};
+
+      filtered.forEach(row => {
+        const nama = karyawanMap[row.nik] || "Unknown";
+        if (!mekanikSummary[nama]) mekanikSummary[nama] = {};
+        const tgl = row.tanggal;
+        mekanikSummary[nama][tgl] = (mekanikSummary[nama][tgl] || 0) + 1;
+      });
+
+      Object.entries(mekanikSummary).forEach(([nama, tanggalMap]) => {
+        const card = document.createElement("div");
+        card.className = "card-summary";
+        card.innerHTML = `<h4>${nama}</h4>`;
+        const ul = document.createElement("ul");
+
+        Object.entries(tanggalMap).forEach(([tgl, count]) => {
+          const li = document.createElement("li");
+          li.textContent = `📅 ${tgl}: ${count} input`;
+          ul.appendChild(li);
+        });
+
+        card.appendChild(ul);
+        summaryDiv.appendChild(card);
+      });
+    }
+
+    function renderSummaryTable() {
+      const map = {};
+      allData.forEach(d => {
+        const tanggal = d.tanggal;
+        const nama = karyawanMap[d.nik] || 'Unknown';
+        const key = tanggal + '|' + nama;
+        map[key] = (map[key] || 0) + 1;
+      });
+
+      const tbody = document.querySelector('#summaryTable tbody');
+      tbody.innerHTML = '';
+      Object.entries(map).forEach(([key, count]) => {
+        const [tanggal, nama] = key.split('|');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${tanggal}</td><td>${nama}</td><td>${count}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderTopMesinTable() {
+      const mesinPerTanggal = {};
+      allData.forEach(d => {
+        const tanggal = d.tanggal;
+        const idMesin = d.idMesin;
+        if (!mesinPerTanggal[tanggal]) mesinPerTanggal[tanggal] = {};
+        mesinPerTanggal[tanggal][idMesin] = (mesinPerTanggal[tanggal][idMesin] || 0) + 1;
+      });
+
+      const tbody = document.querySelector('#topMesinTable tbody');
+      tbody.innerHTML = '';
+      Object.entries(mesinPerTanggal).forEach(([tanggal, mesinMap]) => {
+        const top5 = Object.entries(mesinMap)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5);
+          top5.forEach(([idMesin, count]) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${tanggal}</td><td>${idMesin}</td><td>${count}</td>`;
+            tbody.appendChild(tr);
+          });
+        });
+    }
+
+    function applyFilter() {
+      const nama = document.getElementById('filterNama').value.toLowerCase();
+      const tanggal = document.getElementById('filterTanggal').value;
+      const Factory = document.getElementById('filterFactory').value.toUpperCase();
+      const filtered = allData.filter(d => {
+      const mekanik = (karyawanMap[d.nik] || "").toLowerCase();
+      return (!nama || mekanik.includes(nama)) &&
+             (!tanggal || d.tanggal === tanggal) &&
+             (!Factory || d.Factory.includes(Factory));
+      });
+
+      renderTable(filtered);
+    }
+
+    let karyawanMap = {};
+
+    onValue(ref(db, "karyawan"), snapshot => {
+      karyawanMap = snapshot.val() || {};
+    });
+
+    const nikInput = document.querySelector('input[name="nik"]');
+    const nikWarning = document.getElementById("nikWarning");
+
+    nikInput.addEventListener("input", () => {
+      const nik = nikInput.value.trim();
+      if (nik === "") {
+        nikWarning.style.display = "none";
+      return;
+      }
+
+      const nikCleaned = nik.replace(/^0+/, ""); // hapus nol di depan
+      if (karyawanMap[nikCleaned]) {
+        nikWarning.style.display = "none";
+      } else {
+        nikWarning.style.display = "block";
+      }
+    });
+
+    onValue(ref(db, "downtime"), snapshot => {
+      allData.length = 0;
+      snapshot.forEach(child => {
+        const val = child.val();
+        allData.push({
+          ...val,
+          id: child.key
+        });
+      });
+      renderTable();
+      renderSummaryMekanik();
+      renderTopIdMesin();
+      renderSummaryTable();
+      renderTopMesinTable();     
+    });
+
+    window.applyFilter = applyFilter;
+  </script>
+
+  <script>
+    function showSection(id) {
+      document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      
+      if (id === 'summary') renderSummary();
+      if (id === 'topmesin') renderTopMesin();
+    }
+
+    function toggleSubmenu() {
+      const sub = document.getElementById("submenu");
+      sub.style.display = sub.style.display === "none" ? "block" : "none";
+    }
+
+    function showSection(id) {
+      document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+      function toggleSubmenu() {
+      const sub = document.getElementById("submenu");
+      sub.style.display = sub.style.display === "none" ? "block" : "none";
+    }
+
+      document.querySelectorAll('.sidebar ul li').forEach(li => {
+        li.addEventListener('click', function () {
+        document.querySelectorAll('.sidebar ul li').forEach(item => item.classList.remove('active'));
+        this.classList.add('active');
+        });
+      });
+
+      const sidebar = document.querySelector(".sidebar");
+      const main = document.querySelector(".main");
+      const btn = document.getElementById("toggleSidebar");
+
+      if (sidebar.classList.contains("collapsed") || sidebar.classList.contains("hidden")) {
+        btn.style.left = "70px";
+        btn.style.background = "rgba(0, 0, 0, 0.75)";
+        btn.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.4)";
+      } else {
+        btn.style.left = "180px";
+        btn.style.background = "rgba(0, 0, 0, 0.5)";
+        btn.style.boxShadow = "none";
+      }
+
+      btn.addEventListener("click", () => {
+      sidebar.classList.toggle("collapsed");
+      sidebar.classList.toggle("hidden");
+      main.classList.toggle("expanded");
+
+      if (sidebar.classList.contains("collapsed")) {
+        btn.style.left = "70px";
+        btn.style.background = "rgba(0, 0, 0, 0.75)";
+        btn.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.4)";
+      } else {
+        btn.style.left = "180px";
+        btn.style.background = "rgba(0, 0, 0, 0.5)";
+        btn.style.boxShadow = "none";
+      }
+    });
+  </script>
+</body>
+</html>
