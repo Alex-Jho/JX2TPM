@@ -43,8 +43,7 @@
     }
 
     .sidebar {
-      width: 220px;
-      /*background: linear-gradient(135deg, rgba(10, 25, 70, 0.85), rgba(192, 18, 33, 0.85));*/
+      width: 160px;
       background-color: #1a1a2e;
       backdrop-filter: blur(8px);
       color: white;
@@ -67,7 +66,7 @@
     }
 
     .sidebar.collapsed {
-      width: 60px;
+      width: 50px;
     }
 
     .sidebar.collapsed ul li {
@@ -115,7 +114,7 @@
     }
 
     .main {
-      margin-left: 220px;
+      margin-left: 160px;
       padding: 30px;
       flex-grow: 1;
       padding-top: 60px;
@@ -132,6 +131,38 @@
 
     .section.active {
       display: block;
+    }
+
+    #summaryContent {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .card-summary {
+      background: white;
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .card-summary h4 {
+      margin: 0 0 8px;
+      color: #2c3e50;
+      font-size: 16px;
+    }
+
+    .card-summary ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .card-summary ul li {
+      margin-bottom: 4px;
+      color: #555;
     }
 
     form input, form select, form textarea {
@@ -200,6 +231,14 @@
         <span class="bi bi-graph-up"></span>
         <span class="menu-text">Grafik</span>
       </li>
+      <li onclick="showSection('summary')">
+        <span class="bi bi-card-checklist"></span>
+        <span class="menu-text">Summary Mekanik</span>
+      </li>
+      <li onclick="showSection('topmesin')">
+        <span class="bi bi-star-fill"></span>
+        <span class="menu-text">Top ID Mesin</span>
+      </li>
     </ul>
   <li onclick="showSection('gaji')">
     <span class="bi bi-cash-stack"></span>
@@ -249,7 +288,7 @@
       <input type="text" id="filterNama" placeholder="Nama Mekanik">
       <input type="date" id="filterTanggal">
       <input type="text" id="filterFactory" placeholder="Factory">
-      <button onclick="applyFilter()">Terapkan Filter</button>
+      <button onclick="applyFilter()">Cari</button>
 
       <table id="dataTable">
         <thead>
@@ -273,6 +312,36 @@
     <section id="grafik" class="section">
       <h2>Grafik Data Downtime</h2>
       <canvas id="chart" height="120"></canvas>
+      <h3>Ringkasan Downtime per Mekanik</h3>
+      <div id="summaryContent"></div>
+    </section>
+
+    <section id="summary" class="section">
+      <h2>Summary Per Mekanik per Tanggal</h2>
+        <table id="summaryTable">
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>Nama Mekanik</th>
+              <th>Jumlah Input</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+    </section>
+
+    <section id="topmesin" class="section">
+      <h2>Top 5 ID Mesin</h2>
+        <table id="topMesinTable">
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>ID Mesin</th>
+              <th>Jumlah Kerusakan</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
     </section>
 
     <section id="gaji" class="section">
@@ -315,7 +384,12 @@
         alert("Waktu selesai harus lebih besar dari waktu mulai");
         return;
       }
-      data.tanggal = new Date().toISOString().split("T")[0];
+      const today = new Date();
+      const tanggalLocal = today.toLocaleDateString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit' })
+      .split('/')
+      .reverse()
+      .join('-');
+      data.tanggal = tanggalLocal;
       data.timestamp = Date.now();
       await push(ref(db, "downtime"), data);
       alert("Data berhasil dikirim");
@@ -349,6 +423,7 @@
         tableBody.appendChild(tr);
       });
       renderChart(areaMap);
+      renderSummary(filtered);  
     }
 
     let chart;
@@ -366,6 +441,78 @@
           }]
         }
       });
+    }
+
+    function renderSummary(filtered) {
+      const summaryDiv = document.getElementById("summaryContent");
+      summaryDiv.innerHTML = "";
+
+      const mekanikSummary = {};
+
+      filtered.forEach(row => {
+        const nama = karyawanMap[row.nik] || "Unknown";
+        if (!mekanikSummary[nama]) mekanikSummary[nama] = {};
+        const tgl = row.tanggal;
+        mekanikSummary[nama][tgl] = (mekanikSummary[nama][tgl] || 0) + 1;
+      });
+
+      Object.entries(mekanikSummary).forEach(([nama, tanggalMap]) => {
+        const card = document.createElement("div");
+        card.className = "card-summary";
+        card.innerHTML = `<h4>${nama}</h4>`;
+        const ul = document.createElement("ul");
+
+        Object.entries(tanggalMap).forEach(([tgl, count]) => {
+          const li = document.createElement("li");
+          li.textContent = `📅 ${tgl}: ${count} input`;
+          ul.appendChild(li);
+        });
+
+        card.appendChild(ul);
+        summaryDiv.appendChild(card);
+      });
+    }
+
+    function renderSummaryTable() {
+      const map = {};
+      allData.forEach(d => {
+        const tanggal = d.tanggal;
+        const nama = karyawanMap[d.nik] || 'Unknown';
+        const key = tanggal + '|' + nama;
+        map[key] = (map[key] || 0) + 1;
+      });
+
+      const tbody = document.querySelector('#summaryTable tbody');
+      tbody.innerHTML = '';
+      Object.entries(map).forEach(([key, count]) => {
+        const [tanggal, nama] = key.split('|');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${tanggal}</td><td>${nama}</td><td>${count}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderTopMesinTable() {
+      const mesinPerTanggal = {};
+      allData.forEach(d => {
+        const tanggal = d.tanggal;
+        const idMesin = d.idMesin;
+        if (!mesinPerTanggal[tanggal]) mesinPerTanggal[tanggal] = {};
+        mesinPerTanggal[tanggal][idMesin] = (mesinPerTanggal[tanggal][idMesin] || 0) + 1;
+      });
+
+      const tbody = document.querySelector('#topMesinTable tbody');
+      tbody.innerHTML = '';
+      Object.entries(mesinPerTanggal).forEach(([tanggal, mesinMap]) => {
+        const top5 = Object.entries(mesinMap)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5);
+          top5.forEach(([idMesin, count]) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${tanggal}</td><td>${idMesin}</td><td>${count}</td>`;
+            tbody.appendChild(tr);
+          });
+        });
     }
 
     function applyFilter() {
@@ -416,6 +563,8 @@
         });
       });
       renderTable();
+      renderSummaryTable();
+      renderTopMesinTable();     
     });
 
     window.applyFilter = applyFilter;
@@ -425,6 +574,9 @@
     function showSection(id) {
       document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
       document.getElementById(id).classList.add('active');
+      
+      if (id === 'summary') renderSummary();
+      if (id === 'topmesin') renderTopMesin();
     }
 
     function toggleSubmenu() {
@@ -458,7 +610,7 @@
         btn.style.background = "rgba(0, 0, 0, 0.75)";
         btn.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.4)";
       } else {
-        btn.style.left = "240px";
+        btn.style.left = "180px";
         btn.style.background = "rgba(0, 0, 0, 0.5)";
         btn.style.boxShadow = "none";
       }
@@ -473,7 +625,7 @@
         btn.style.background = "rgba(0, 0, 0, 0.75)";
         btn.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.4)";
       } else {
-        btn.style.left = "240px";
+        btn.style.left = "180px";
         btn.style.background = "rgba(0, 0, 0, 0.5)";
         btn.style.boxShadow = "none";
       }
