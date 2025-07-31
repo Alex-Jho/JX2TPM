@@ -134,7 +134,7 @@
     }
 
     #summaryContent {
-      display: grid;
+      display: none;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 16px;
       margin-top: 20px;
@@ -163,6 +163,39 @@
     .card-summary ul li {
       margin-bottom: 4px;
       color: #555;
+    }
+
+    .card {
+      background: linear-gradient(135deg, rgba(27, 4, 233, 0.1), rgba(228, 40, 27, 0.05));
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
+      backdrop-filter: blur(6px);
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+
+    .card h4 {
+      margin: 0 0 8px;
+      color: #1e293b;
+      font-size: 18px;
+    }
+
+    .card p {
+      margin: 4px 0;
+      color: #334155;
+      font-size: 14px;
+    }
+
+    #summaryContainer, #topIdMesinContainer {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
     }
 
     form input, form select, form textarea {
@@ -208,6 +241,7 @@
       border-radius: 8px;
     }
   </style>
+
 </head>
 <body>
   <button id="toggleSidebar">☰</button>
@@ -232,8 +266,8 @@
         <span class="menu-text">Grafik</span>
       </li>
       <li onclick="showSection('summary')">
-        <span class="bi bi-card-checklist"></span>
-        <span class="menu-text">Summary Mekanik</span>
+        <span class="bi bi-clipboard-data"></span>
+        <span class="menu-text">Summary</span>
       </li>
       <li onclick="showSection('topmesin')">
         <span class="bi bi-star-fill"></span>
@@ -312,36 +346,17 @@
     <section id="grafik" class="section">
       <h2>Grafik Data Downtime</h2>
       <canvas id="chart" height="120"></canvas>
-      <h3>Ringkasan Downtime per Mekanik</h3>
       <div id="summaryContent"></div>
     </section>
 
     <section id="summary" class="section">
-      <h2>Summary Per Mekanik per Tanggal</h2>
-        <table id="summaryTable">
-          <thead>
-            <tr>
-              <th>Tanggal</th>
-              <th>Nama Mekanik</th>
-              <th>Jumlah Input</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+      <h2>Summary Input Downtime</h2>
+      <div id="summaryContainer"></div>
     </section>
 
     <section id="topmesin" class="section">
-      <h2>Top 5 ID Mesin</h2>
-        <table id="topMesinTable">
-          <thead>
-            <tr>
-              <th>Tanggal</th>
-              <th>ID Mesin</th>
-              <th>Jumlah Kerusakan</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+      <h2 style="margin-top:40px;">Top 5 ID Mesin</h2>
+      <div id="topIdMesinContainer"></div>
     </section>
 
     <section id="gaji" class="section">
@@ -423,7 +438,56 @@
         tableBody.appendChild(tr);
       });
       renderChart(areaMap);
-      renderSummary(filtered);  
+      renderSummary(filtered);
+    }
+
+    function renderSummaryMekanik() {
+      const summaryContainer = document.getElementById("summaryContainer");
+      summaryContainer.innerHTML = "";
+
+      const grouped = {};
+      allData.forEach(item => {
+        const nama = karyawanMap[item.nik] || "Unknown";
+        const key = `${nama}_${item.tanggal}`;
+        grouped[key] = (grouped[key] || 0) + 1;
+      });
+
+      Object.entries(grouped).forEach(([key, count]) => {
+        const [nama, tanggal] = key.split("_");
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+        <h4>${nama}</h4>
+        <p><strong>Tanggal:</strong> ${tanggal}</p>
+        <p><strong>Jumlah Input:</strong> ${count}</p>
+        `;
+        summaryContainer.appendChild(card);
+      });
+    }
+
+    function renderTopIdMesin() {
+      const container = document.getElementById("topIdMesinContainer");
+      container.innerHTML = "";
+
+      const grouped = {};
+
+      allData.forEach(item => {
+        const tanggal = item.tanggal;
+        if (!grouped[tanggal]) grouped[tanggal] = {};
+        grouped[tanggal][item.idMesin] = (grouped[tanggal][item.idMesin] || 0) + 1;
+      });
+
+      Object.entries(grouped).forEach(([tanggal, mesinMap]) => {
+        const sorted = Object.entries(mesinMap)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5);
+
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `<h4>Top 5 ID Mesin - ${tanggal}</h4>` + sorted.map(([id, count]) =>
+        `<p><strong>${id}</strong>: ${count}x</p>`).join("");
+        container.appendChild(card);
+      });
     }
 
     let chart;
@@ -563,6 +627,8 @@
         });
       });
       renderTable();
+      renderSummaryMekanik();
+      renderTopIdMesin();
       renderSummaryTable();
       renderTopMesinTable();     
     });
