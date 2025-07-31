@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Monitoring Downtime</title>
-  <script src="https://unpkg.com/@ericblade/quagga2@1.2.6/dist/quagga.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     * {
@@ -18,14 +18,73 @@
       display: flex;
     }
 
-    /* Sidebar */
+    #toggleSidebar {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 1001;
+      background: rgba(0, 0, 0, 0.75);
+      color: white;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 20px;
+      cursor: pointer;
+      transition: left 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: none;
+    }
+
+    .sidebar.hidden + #toggleSidebar {
+      left: 15px; /* Ketika sidebar tersembunyi, tombol kembali ke kiri */
+    }
+    
+    #toggleSidebar:hover {
+      background: #16a085;
+    }
+
     .sidebar {
       width: 220px;
-      background: #2c3e50;
+      /*background: linear-gradient(135deg, rgba(10, 25, 70, 0.85), rgba(192, 18, 33, 0.85));*/
+      background-color: #1a1a2e;
+      backdrop-filter: blur(8px);
       color: white;
-      padding-top: 20px;
       height: 100vh;
       position: fixed;
+      top: 0; left: 0;
+      transition: transform 0.3s ease;
+      z-index: 100;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .sidebar ul li.active {
+      background: rgba(255, 255, 255, 0.2);
+      color: #00e0ff;
+    }
+
+    .sidebar ul li.active span.bi {
+      color: #00e0ff;
+    }
+
+    .sidebar.collapsed {
+      width: 60px;
+    }
+
+    .sidebar.collapsed ul li {
+      justify-content: center;
+      color: #ffffff;
+    }
+
+    .sidebar.collapsed .menu-text {
+      display: none;
+    }
+
+    .sidebar.collapsed h2 {
+      display: none;
+    }
+
+    .sidebar.hidden {
+      transform: translateX(-100%);
     }
 
     .sidebar h2 {
@@ -41,10 +100,12 @@
     .sidebar ul li {
       padding: 12px 20px;
       cursor: pointer;
+      transition: all 0.3s ease;
     }
 
     .sidebar ul li:hover {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.15);
+      color: #ffc107;
     }
 
     .sidebar .submenu {
@@ -53,18 +114,23 @@
       background: rgba(255,255,255,0.05);
     }
 
-    /* Main content */
     .main {
       margin-left: 220px;
       padding: 30px;
       flex-grow: 1;
+      padding-top: 60px;
+      transition: all 0.3s ease;
+    }
+
+    .main.expanded {
+      margin-left: 60px;
     }
 
     .section {
       display: none;
     }
 
-    .active {
+    .section.active {
       display: block;
     }
 
@@ -113,26 +179,41 @@
   </style>
 </head>
 <body>
-
+  <button id="toggleSidebar">☰</button>
   <div class="sidebar">
     <h2>MENU</h2>
     <ul>
-      <li onclick="showSection('input')">Input Data Downtime</li>
-      <li onclick="toggleSubmenu()">Cek Data Downtime</li>
-        <ul class="submenu" id="submenu" style="display:none;">
-          <li onclick="showSection('tabel')">- Tabel</li>
-          <li onclick="showSection('grafik')">- Grafik</li>
-        </ul>
-      <li onclick="showSection('gaji')">Cek Gaji Bruto</li>
+      <li onclick="showSection('input')">
+        <span class="bi bi-pencil-square"></span>
+        <span class="menu-text">Input Data Downtime</span>
+      </li>
+      <li onclick="toggleSubmenu()">
+        <span class="bi bi-bar-chart"></span>
+        <span class="menu-text">Cek Data Downtime</span>
+      </li>
+      <ul class="submenu" id="submenu" style="display:none;">
+        <li onclick="showSection('tabel')">
+          <span class="bi bi-table"></span>
+          <span class="menu-text">Tabel</span>
+        </li>
+      <li onclick="showSection('grafik')">
+        <span class="bi bi-graph-up"></span>
+        <span class="menu-text">Grafik</span>
+      </li>
+    </ul>
+  <li onclick="showSection('gaji')">
+    <span class="bi bi-cash-stack"></span>
+    <span class="menu-text">Cek Gaji Bruto</span>
+  </li>
     </ul>
   </div>
 
   <div class="main">
-    <!-- INPUT -->
     <section id="input" class="section active">
       <h2>Input Downtime</h2>
       <form id="inputForm">
-        <input type="number" name="nik" placeholder="NIK" required>
+        <input type="text" name="nik" placeholder="NIK" required pattern="\d+" inputmode="numeric">
+        <small id="nikWarning" style="color: #e74c3c; font-style: italic; display: none;">NIK tidak ditemukan di database</small>
         <select name="Factory" required>
           <option value="">Pilih Factory</option>
           <option value="F1">F1</option>
@@ -149,8 +230,6 @@
           <option value="MCC">MCC</option>
         </select>
         <input type="text" name="idMesin" placeholder="ID Mesin" required>
-        <button type="button" onclick="startQuagga()">Scan ID Mesin</button>
-        <div id="scanner-container" style="width: 300px; height: 200px; margin-top: 10px; display: none;"></div>
         <textarea name="masalah" placeholder="Masalah" required></textarea>
         <textarea name="tindakan" placeholder="Tindakan" required></textarea>
         <input type="text" name="sparepart" placeholder="Sparepart" required>
@@ -165,10 +244,9 @@
       </form>
     </section>
 
-    <!-- TABEL -->
     <section id="tabel" class="section">
       <h2>Tabel Data Downtime</h2>
-      <input type="text" id="filterNik" placeholder="Cari NIK">
+      <input type="text" id="filterNama" placeholder="Nama Mekanik">
       <input type="date" id="filterTanggal">
       <input type="text" id="filterFactory" placeholder="Factory">
       <button onclick="applyFilter()">Terapkan Filter</button>
@@ -178,6 +256,7 @@
           <tr>
             <th>Tanggal</th>
             <th>NIK</th>
+            <th>Mekanik</th>
             <th>Factory</th>
             <th>Area</th>
             <th>ID Mesin</th>
@@ -191,20 +270,17 @@
       </table>
     </section>
 
-    <!-- GRAFIK -->
     <section id="grafik" class="section">
       <h2>Grafik Data Downtime</h2>
       <canvas id="chart" height="120"></canvas>
     </section>
 
-    <!-- CEK GAJI -->
     <section id="gaji" class="section">
       <h2>Fitur Cek Gaji Bruto (Dalam Pengembangan)</h2>
       <p>Fitur ini akan segera tersedia.</p>
     </section>
   </div>
 
-  <!-- SCRIPT -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
     import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
@@ -225,8 +301,16 @@
     const form = document.getElementById('inputForm');
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      stopQuagga();
       const data = Object.fromEntries(new FormData(form).entries());
+      const nikCleaned = data.nik.replace(/^0+/, ""); // hapus nol di depan
+      if (!karyawanMap[nikCleaned]) {
+        alert("NIK tidak ditemukan di database!");
+        return;
+      }
+
+      data.nik = nikCleaned;
+      data.nik = String(Number(data.nik));
+
       if (data.mulai >= data.selesai) {
         alert("Waktu selesai harus lebih besar dari waktu mulai");
         return;
@@ -241,27 +325,19 @@
     const allData = [];
     const tableBody = document.querySelector("#dataTable tbody");
 
-    function renderTable(filter = {}) {
+    function renderTable(data = allData) {
       tableBody.innerHTML = "";
-      let filtered = allData;
-
-      console.log("All data:", allData);
-
-      if (filter.nik || filter.Factory || filter.tanggal) {
-        filtered = allData.filter(d =>
-          (!filter.nik || d.nik.includes(filter.nik)) &&
-          (!filter.Factory || d.Factory.includes(filter.Factory)) &&
-          (!filter.tanggal || d.tanggal === filter.tanggal)
-        );
-      }
+      let filtered = data;
 
       let areaMap = {};
-      filtered.forEach((row, index) => {
+      filtered.forEach(row => {
         areaMap[row.area] = (areaMap[row.area] || 0) + 1;
+        const mekanik = karyawanMap[row.nik] || "Unknown";
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${row.tanggal}</td>
           <td>${row.nik}</td>
+          <td>${mekanik}</td>
           <td>${row.Factory}</td>
           <td>${row.area}</td>
           <td>${row.idMesin}</td>
@@ -274,59 +350,6 @@
       });
       renderChart(areaMap);
     }
-    
-    let quaggaRunning = false;
-
-    function startQuagga() {
-      if (quaggaRunning) return;
-
-      const container = document.getElementById("scanner-container");
-      container.style.display = "block";
-
-    Quagga.init({
-        inputStream: {
-          name: "Live",
-          type: "LiveStream",
-          target: container,
-          constraints: {
-            facingMode: "environment" // kamera belakang
-          },
-          area: { // Fokus scan di tengah layar
-          top: "30%",    // dari atas 30%
-          right: "30%",  // dari kanan 30%
-          left: "30%",   // dari kiri 30%
-          bottom: "30%"  // dari bawah 30%
-          }
-        },
-        decoder: {
-         readers: ["code_128_reader"] // format barcode yang didukung
-        },
-        locate: true
-      }, function(err) {
-      if (err) {
-        console.error(err);
-        alert("Gagal mengakses kamera");
-        return;
-        }
-        Quagga.start();
-        quaggaRunning = true;
-      });
-
-      Quagga.onDetected(result => {
-        const code = result.codeResult.code;
-        document.querySelector('[name="idMesin"]').value = code;
-        stopQuagga();
-      });
-    }
-
-  function stopQuagga() {
-    if (quaggaRunning) {
-      Quagga.stop();
-      Quagga.offDetected();
-      document.getElementById("scanner-container").style.display = "none";
-      quaggaRunning = false;
-    }
-  }
 
     let chart;
     function renderChart(areaMap) {
@@ -346,11 +369,42 @@
     }
 
     function applyFilter() {
-      const nik = document.getElementById('filterNik').value.toUpperCase();
+      const nama = document.getElementById('filterNama').value.toLowerCase();
       const tanggal = document.getElementById('filterTanggal').value;
       const Factory = document.getElementById('filterFactory').value.toUpperCase();
-      renderTable({ nik, tanggal, Factory });
+      const filtered = allData.filter(d => {
+      const mekanik = (karyawanMap[d.nik] || "").toLowerCase();
+      return (!nama || mekanik.includes(nama)) &&
+             (!tanggal || d.tanggal === tanggal) &&
+             (!Factory || d.Factory.includes(Factory));
+      });
+
+      renderTable(filtered);
     }
+
+    let karyawanMap = {};
+
+    onValue(ref(db, "karyawan"), snapshot => {
+      karyawanMap = snapshot.val() || {};
+    });
+
+    const nikInput = document.querySelector('input[name="nik"]');
+    const nikWarning = document.getElementById("nikWarning");
+
+    nikInput.addEventListener("input", () => {
+      const nik = nikInput.value.trim();
+      if (nik === "") {
+        nikWarning.style.display = "none";
+      return;
+      }
+
+      const nikCleaned = nik.replace(/^0+/, ""); // hapus nol di depan
+      if (karyawanMap[nikCleaned]) {
+        nikWarning.style.display = "none";
+      } else {
+        nikWarning.style.display = "block";
+      }
+    });
 
     onValue(ref(db, "downtime"), snapshot => {
       allData.length = 0;
@@ -365,8 +419,6 @@
     });
 
     window.applyFilter = applyFilter;
-    window.startQuagga = startQuagga;
-    window.stopQuagga = stopQuagga;
   </script>
 
   <script>
@@ -379,6 +431,53 @@
       const sub = document.getElementById("submenu");
       sub.style.display = sub.style.display === "none" ? "block" : "none";
     }
+
+    function showSection(id) {
+      document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+      function toggleSubmenu() {
+      const sub = document.getElementById("submenu");
+      sub.style.display = sub.style.display === "none" ? "block" : "none";
+    }
+
+      document.querySelectorAll('.sidebar ul li').forEach(li => {
+        li.addEventListener('click', function () {
+        document.querySelectorAll('.sidebar ul li').forEach(item => item.classList.remove('active'));
+        this.classList.add('active');
+        });
+      });
+
+      const sidebar = document.querySelector(".sidebar");
+      const main = document.querySelector(".main");
+      const btn = document.getElementById("toggleSidebar");
+
+      if (sidebar.classList.contains("collapsed") || sidebar.classList.contains("hidden")) {
+        btn.style.left = "70px";
+        btn.style.background = "rgba(0, 0, 0, 0.75)";
+        btn.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.4)";
+      } else {
+        btn.style.left = "240px";
+        btn.style.background = "rgba(0, 0, 0, 0.5)";
+        btn.style.boxShadow = "none";
+      }
+
+      btn.addEventListener("click", () => {
+      sidebar.classList.toggle("collapsed");
+      sidebar.classList.toggle("hidden");
+      main.classList.toggle("expanded");
+
+      if (sidebar.classList.contains("collapsed")) {
+        btn.style.left = "70px";
+        btn.style.background = "rgba(0, 0, 0, 0.75)";
+        btn.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.4)";
+      } else {
+        btn.style.left = "240px";
+        btn.style.background = "rgba(0, 0, 0, 0.5)";
+        btn.style.boxShadow = "none";
+      }
+    });
   </script>
 </body>
 </html>
