@@ -368,15 +368,11 @@
           <option value="PRINTING">PRINTING</option>
           <option value="STITCHING">STITCHING</option>
         </select>
-        <input type="text" name="idMesin" placeholder="ID Mesin" required>
+        <input list="idMesinList" id="idMesin" name="idMesin" placeholder="Ketik ID Mesin...">
+          <datalist id="idMesinList"></datalist>
         <textarea name="masalah" placeholder="Masalah" required></textarea>
         <textarea name="tindakan" placeholder="Tindakan" required></textarea>
         <input type="text" name="sparepart" placeholder="Sparepart" required>
-        <select name="keterangan" required>
-          <option value="">Pilih Keterangan</option>
-          <option value="PERBAIKAN DI TEMPAT">PERBAIKAN DI TEMPAT</option>
-          <option value="GANTI MESIN">GANTI MESIN</option>
-        </select>
         <input type="time" name="mulai" required>
         <input type="time" name="selesai" required>
         <button type="submit">Kirim</button>
@@ -459,7 +455,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-    import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+    import { getDatabase, ref, push, onValue, child, get } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDut3AnvIY81bzkZT8vTRVrU5-9zXIJSFo",
@@ -473,15 +469,36 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    const datalist = document.getElementById("idMesinList");
 
+    const dbRef = ref(db);
+    get(child(dbRef, "idMesinList"))
+      .then((snapshot) => {
+        if (snapshot.exists()) {
+          const idList = snapshot.val();
+
+          Object.values(idList).forEach((id) => {
+            const option = document.createElement("option");
+            option.value = id;
+            datalist.appendChild(option);
+          });
+        }
+      });
     const form = document.getElementById('inputForm');
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const data = Object.fromEntries(new FormData(form).entries());
+      let data = Object.fromEntries(new FormData(form).entries());
+
       const nikCleaned = data.nik.replace(/^0+/, ""); // hapus nol di depan
       if (!karyawanMap[nikCleaned]) {
         alert("NIK tidak ditemukan di database!");
         return;
+      }
+
+      for (let key in data) {
+        if (key !== "mulai" && key !== "selesai") {
+          data[key] = data[key].toUpperCase();
+        }
       }
 
       data.nik = nikCleaned;
