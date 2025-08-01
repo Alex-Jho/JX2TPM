@@ -368,8 +368,7 @@
           <option value="PRINTING">PRINTING</option>
           <option value="STITCHING">STITCHING</option>
         </select>
-        <input list="idMesinList" id="idMesin" name="idMesin" placeholder="Ketik ID Mesin...">
-          <datalist id="idMesinList"></datalist>
+        <input type="text" name="idMesin" placeholder="ID Mesin" required>
         <textarea name="masalah" placeholder="Masalah" required></textarea>
         <textarea name="tindakan" placeholder="Tindakan" required></textarea>
         <input type="text" name="sparepart" placeholder="Sparepart" required>
@@ -433,17 +432,33 @@
 
     <section id="grafik" class="section">
       <h2>Grafik Data Downtime</h2>
+      <div class="filter-group">
+        <input type="date" id="filterGrafikFrom" class="filter-input">
+        <input type="date" id="filterGrafikTo" class="filter-input">
+        <button onclick="applyGrafikFilter()" class="btn-cari">🔍 Cari</button>
+      </div>
       <canvas id="chart" height="120"></canvas>
       <div id="summaryContent"></div>
     </section>
 
     <section id="summary" class="section">
-      <h2>Summary Input Downtime</h2>
+      <h2>Summary Input Downtime per Mekanik</h2>
+      <div class="filter-group">
+        <input type="text" id="filterSummaryNama" placeholder="Nama Mekanik" class="filter-input">
+        <input type="date" id="filterSummaryFrom" class="filter-input">
+        <input type="date" id="filterSummaryTo" class="filter-input">
+        <button onclick="applySummaryFilter()" class="btn-cari">🔍 Cari</button>
+      </div>
       <div id="summaryContainer"></div>
     </section>
 
     <section id="topmesin" class="section">
-      <h2 style="margin-top:40px;">Top 5 ID Mesin</h2>
+      <h2>Summary Top 5 ID Mesin</h2>
+      <div class="filter-group">
+        <input type="date" id="filterTopFrom" class="filter-input">
+        <input type="date" id="filterTopTo" class="filter-input">
+        <button onclick="applyTopIdMesinFilter()" class="btn-cari">🔍 Cari</button>
+      </div>
       <div id="topIdMesinContainer"></div>
     </section>
 
@@ -455,7 +470,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-    import { getDatabase, ref, push, onValue, child, get } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+    import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDut3AnvIY81bzkZT8vTRVrU5-9zXIJSFo",
@@ -469,21 +484,7 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const datalist = document.getElementById("idMesinList");
 
-    const dbRef = ref(db);
-    get(child(dbRef, "idMesinList"))
-      .then((snapshot) => {
-        if (snapshot.exists()) {
-          const idList = snapshot.val();
-
-          Object.values(idList).forEach((id) => {
-            const option = document.createElement("option");
-            option.value = id;
-            datalist.appendChild(option);
-          });
-        }
-      });
     const form = document.getElementById('inputForm');
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -500,7 +501,7 @@
           data[key] = data[key].toUpperCase();
         }
       }
-
+      
       data.nik = nikCleaned;
       data.nik = String(Number(data.nik));
 
@@ -686,6 +687,80 @@
       renderTable(filtered);
     }
 
+    function applySummaryFilter() {
+      const nama = document.getElementById('filterSummaryNama').value.toLowerCase();
+      const from = document.getElementById('filterSummaryFrom').value;
+      const to = document.getElementById('filterSummaryTo').value;
+
+      const filtered = allData.filter(d => {
+        const mekanik = (karyawanMap[d.nik] || '').toLowerCase();
+        return (!nama || mekanik.includes(nama)) &&
+              (!from || d.tanggal >= from) &&
+              (!to || d.tanggal <= to);
+      });
+
+      const summaryContainer = document.getElementById("summaryContainer");
+      summaryContainer.innerHTML = "";
+
+      const grouped = {};
+      filtered.forEach(item => {
+        const nama = karyawanMap[item.nik] || "Unknown";
+        const key = `${nama}_${item.tanggal}`;
+        grouped[key] = (grouped[key] || 0) + 1;
+      });
+
+      const sortedEntries = Object.entries(grouped)
+      .sort((a, b) => {
+        const [namaA, tglA] = a[0].split("_");
+        const [namaB, tglB] = b[0].split("_");
+        if (b[1] !== a[1]) return b[1] - a[1]; // Urut jumlah input menurun
+        return namaA.localeCompare(namaB);    // Urut abjad jika sama
+      });
+
+      sortedEntries.forEach(([key, count]) => {
+        const [nama, tanggal] = key.split("_");
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <h4>${nama}</h4>
+          <p><strong>Tanggal:</strong> ${tanggal}</p>
+          <p><strong>Jumlah Input:</strong> ${count}</p>
+        `;
+        summaryContainer.appendChild(card);
+      });
+    }
+
+    function applyTopIdMesinFilter() {
+      const from = document.getElementById("filterTopFrom").value;
+      const to = document.getElementById("filterTopTo").value;
+
+      const filtered = allData.filter(row => {
+        return (!from || row.tanggal >= from) && (!to || row.tanggal <= to);
+      });
+
+      const container = document.getElementById("topIdMesinContainer");
+      container.innerHTML = "";
+      const grouped = {};
+
+      filtered.forEach(item => {
+        const tanggal = item.tanggal;
+        if (!grouped[tanggal]) grouped[tanggal] = {};
+        grouped[tanggal][item.idMesin] = (grouped[tanggal][item.idMesin] || 0) + 1;
+      });
+
+      Object.entries(grouped).forEach(([tanggal, mesinMap]) => {
+        const sorted = Object.entries(mesinMap)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5);
+
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `<h4>Top 5 ID Mesin - ${tanggal}</h4>` +
+        sorted.map(([id, count]) => `<p><strong>${id}</strong>: ${count}x</p>`).join("");
+        container.appendChild(card);
+      });
+    }
+
     let karyawanMap = {};
 
     onValue(ref(db, "karyawan"), snapshot => {
@@ -726,6 +801,8 @@
     });
 
     window.applyFilter = applyFilter;
+    window.applySummaryFilter = applySummaryFilter;
+    window.applyTopIdMesinFilter = applyTopIdMesinFilter;
   </script>
 
   <script>
