@@ -21,7 +21,7 @@
     #toggleSidebar {
       position: fixed;
       top: 12px;
-      left: 12px;
+      left: calc(var(--sidebar-width) + 10px);
       z-index: 1001;
       background: rgba(0, 0, 0, 0.75);
       color: white;
@@ -30,7 +30,7 @@
       border-radius: 6px;
       font-size: 20px;
       cursor: pointer;
-      transition: left 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+      transition: left 0.3s ease;
       box-shadow: none;
     }
 
@@ -43,14 +43,17 @@
     }
 
     .sidebar {
-      width: 160px;
+      --sidebar-width: 160px;
+      left: 0;
+      transform: translateX(0);
+      width: var(--sidebar-width);
       background-color: #1a1a2e;
       backdrop-filter: blur(8px);
       color: white;
       height: 100vh;
       position: fixed;
       top: 0; left: 0;
-      transition: transform 0.3s ease;
+      transition: width 0.3s ease;
       z-index: 100;
       box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
       transition: all 0.3s ease;
@@ -66,7 +69,8 @@
     }
 
     .sidebar.collapsed {
-      width: 50px;
+      --sidebar-width: 50px;
+      transform: translateX(-110px);
     }
 
     .sidebar.collapsed ul li {
@@ -329,6 +333,7 @@
     /* Responsive Sidebar Mobile */
     @media (max-width: 576px) {
       .sidebar {
+        transform: translateX(-100%);
         position: fixed;
         left: -100%;
         width: 240px;
@@ -338,6 +343,7 @@
       .sidebar.active {
         left: 0;
         box-shadow: 2px 0 10px rgba(0,0,0,0.4);
+        transform: translateX(0);
       }
 
       #overlay {
@@ -359,6 +365,12 @@
 
       .card-table {
         display: block !important;
+      }
+    }
+
+    @media (min-width: 577px) {
+      .sidebar.collapsed {
+        transform: translateX(-110px);
       }
     }
 
@@ -1097,50 +1109,25 @@
       });
     });
 
-      const sidebar = document.querySelector(".sidebar");
-      const main = document.querySelector(".main");
-      const btn = document.getElementById("toggleSidebar");
+    const btn = document.getElementById("toggleSidebar");
+    const sidebar = document.querySelector(".sidebar");
+    const main = document.querySelector(".main");
 
-      const overlay = document.getElementById('overlay');
+    const overlay = document.getElementById('overlay');
       
-      btn.addEventListener("click", () => {
-        if (window.innerWidth <= 576) {
-          sidebar.classList.toggle("active");
-        } else {
-            sidebar.classList.toggle("collapsed");
-            main.classList.toggle("expanded");
-          }
-      });
-
-      overlay.addEventListener("click", () => {
-        sidebar.classList.remove("active");
-      });
-
-      if (sidebar.classList.contains("collapsed")) {
-        btn.style.left = "70px";
-        btn.style.background = "rgba(0, 0, 0, 0.75)";
-        btn.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.4)";
+    btn.addEventListener("click", () => {
+      if (window.innerWidth <= 576) {
+        sidebar.classList.toggle("active");
       } else {
-          btn.style.left = "180px";
-          btn.style.background = "rgba(0, 0, 0, 0.5)";
-          btn.style.boxShadow = "none";
+          sidebar.classList.toggle("collapsed");
+          document.querySelector(".main").classList.toggle("expanded");
         }
+    });
 
-      btn.addEventListener("click", () => {
-        sidebar.classList.toggle("collapsed");
-        sidebar.classList.toggle("hidden");
-        main.classList.toggle("expanded");
+    overlay.addEventListener("click", () => {
+      sidebar.classList.remove("active");
+    });
 
-        if (sidebar.classList.contains("collapsed")) {
-          btn.style.left = "70px";
-          btn.style.background = "rgba(0, 0, 0, 0.75)";
-          btn.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.4)";
-        } else {
-            btn.style.left = "180px";
-            btn.style.background = "rgba(0, 0, 0, 0.5)";
-            btn.style.boxShadow = "none";
-          }
-      });
   </script>
 </body>
 </html>
