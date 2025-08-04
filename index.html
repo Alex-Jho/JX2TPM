@@ -50,9 +50,10 @@
       height: 100vh;
       position: fixed;
       top: 0; left: 0;
+      transition: transform 0.3s ease;
       z-index: 100;
       box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
-      transition: transform 0.3s ease, width 0.3s ease;
+      transition: all 0.3s ease;
     }
 
     .sidebar ul li.active {
@@ -65,7 +66,7 @@
     }
 
     .sidebar.collapsed {
-      width: 60px;
+      width: 50px;
     }
 
     .sidebar.collapsed ul li {
@@ -325,68 +326,75 @@
       border-radius: 8px;
     }
 
-    /*Untuk Tampilan Mobile*/
-    @media (max-width: 768px) {
-      .sidebar {
-        width: 60px;
-      }
-
-      .sidebar.collapsed {
-        transform: translateX(-100%);
-      }
-
-      .main {
-        margin-left: 60px;
-        padding: 20px;
-      }
-
-      #toggleSidebar {
-        left: 70px;
-      }
-
-      .sidebar.collapsed + #toggleSidebar {
-        left: 15px;
-      }
-    }
-
+    /* Responsive Sidebar Mobile */
     @media (max-width: 576px) {
-      .main {
-        margin-left: 0;
-        padding: 16px;
-      }
-
       .sidebar {
-        transform: translateX(-100%);
+        position: fixed;
+        left: -100%;
+        width: 240px;
+        transition: left 0.3s ease;
       }
 
       .sidebar.active {
-        transform: translateX(0);
+        left: 0;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.4);
       }
 
-      #toggleSidebar {
-        left: 15px;
+      #overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 99;
       }
 
-      .filter-grid {
-        grid-template-columns: 1fr;
+      .sidebar.active ~ #overlay {
+        display: block;
       }
 
-      .filter-group {
-        flex-direction: column;
-        align-items: stretch;
+      .table-responsive {
+        display: none;
       }
 
-      .table-responsive table {
-        min-width: 100%;
+      .card-table {
+        display: block !important;
       }
     }
 
+    /* Sidebar Collapsed Icon */
+    .sidebar.collapsed ul li span.bi {
+      color: white !important;
+    }
+
+    .sidebar.collapsed ul li:hover span.bi {
+      color: #ffc107;
+    }
+
+    /* Spacing and Font Adaptive */
+    .section h2 {
+      margin-bottom: 20px;
+    }
+
+    .filter-group {
+      margin-bottom: 20px;
+    }
+
+    body {
+      font-size: clamp(14px, 2vw, 16px);
+    }
+
+    h2 {
+      font-size: clamp(18px, 3vw, 24px);
+    }
+  
   </style>
 
 </head>
 <body>
-  <button id="toggleSidebar">☰</button>
+  <button id="toggleSidebar" aria-label="Toggle Sidebar">☰</button>
   <div class="sidebar">
+  <div id="overlay"></div>
     <h2>MENU</h2>
     <ul>
       <li onclick="showSection('input')">
@@ -397,28 +405,28 @@
         <span class="bi bi-bar-chart"></span>
         <span class="menu-text">Cek Data Downtime</span>
       </li>
-      <ul class="submenu" id="submenu" style="display:none;">
-        <li onclick="showSection('tabel')">
-          <span class="bi bi-table"></span>
-          <span class="menu-text">Tabel</span>
-        </li>
-      <li onclick="showSection('grafik')">
-        <span class="bi bi-graph-up"></span>
-        <span class="menu-text">Grafik</span>
+        <ul class="submenu" id="submenu" style="display:none;">
+          <li onclick="showSection('tabel')">
+            <span class="bi bi-table"></span>
+            <span class="menu-text">Tabel</span>
+          </li>
+          <li onclick="showSection('grafik')">
+            <span class="bi bi-graph-up"></span>
+            <span class="menu-text">Grafik</span>
+          </li>
+          <li onclick="showSection('summary')">
+            <span class="bi bi-clipboard-data"></span>
+            <span class="menu-text">Summary</span>
+          </li>
+          <li onclick="showSection('topmesin')">
+            <span class="bi bi-star-fill"></span>
+            <span class="menu-text">Top ID Mesin</span>
+          </li>
+        </ul>
+      <li onclick="showSection('gaji')">
+        <span class="bi bi-cash-stack"></span>
+        <span class="menu-text">Cek Gaji Bruto</span>
       </li>
-      <li onclick="showSection('summary')">
-        <span class="bi bi-clipboard-data"></span>
-        <span class="menu-text">Summary</span>
-      </li>
-      <li onclick="showSection('topmesin')">
-        <span class="bi bi-star-fill"></span>
-        <span class="menu-text">Top ID Mesin</span>
-      </li>
-    </ul>
-  <li onclick="showSection('gaji')">
-    <span class="bi bi-cash-stack"></span>
-    <span class="menu-text">Cek Gaji Bruto</span>
-  </li>
     </ul>
   </div>
 
@@ -459,82 +467,80 @@
         <input type="time" id="timestart" name="mulai" required>
         <label for="timeend">Waktu Selesai:</label>        
         <input type="time" id="timeend" name="selesai" required>
-        <button type="submit">Kirim</button>
+        <button type="submit" id="submitBtn">Kirim <span id="loadingSpinner" style="display:none;">⏳</span></button>
+
       </form>
     </section>
 
-    <section id="tabel" class="section">  
-        <h2>Tabel Data Downtime</h2>
-        <div class="filter-grid">
-          <div class="form-group">
-            <label for="filterNama">Nama Mekanik</label>
-            <input type="text" id="filterNama" class="filter-input">
-          </div>
-          <div class="form-group">
-            <label for="filterTanggalFrom">Tanggal Dari</label>
-            <input type="date" id="filterTanggalFrom" class="filter-input">
-          </div>
-          <div class="form-group">
-            <label for="filterTanggalTo">Tanggal Ke</label>
-            <input type="date" id="filterTanggalTo" class="filter-input">
-          </div>
-          <div class="form-group">
-            <label for="filterFactory">Factory</label>
-              <select id="filterFactory" class="filter-input">
-              <option value="">Semua Factory</option>
-              <option value="F1">F1</option>
-              <option value="F2">F2</option>
-              <option value="F3">F3</option>
-              <option value="F4">F4</option>
-              <option value="WAREHOUSE">WAREHOUSE</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="filterArea">Area</label>
-            <select id="filterArea" class="filter-input">
-              <option value="">Semua Area</option>
-              <option value="ACCESSORIES">ACCESSORIES</option>
-              <option value="CCS">CCS</option>
-              <option value="CUTTING">CUTTING</option>
-              <option value="CUTTING UPS">CUTTING UPS</option>
-              <option value="EMBROIDERY UPS">EMBROIDERY UPS</option>
-              <option value="HF WELDING">HF WELDING</option>
-              <option value="LAMINATING">LAMINATING</option>
-              <option value="LCA">LCA</option>
-              <option value="MCC">MCC</option>
-              <option value="NOSEW">NOSEW</option>
-              <option value="PRINTING">PRINTING</option>
-              <option value="STITCHING">STITCHING</option>
-            </select>
-          </div>
-          <h3>
-            <button onclick="applyFilterTabel()" class="btn-cari">
-              🔍 Cari
-            </button>
-            <button onclick="resetFilterTabel()" class="btn-cari" style="background: #dc3545;">
-              🔄 Reset
-            </button>
-          </h3>
-
-        <div class="table-responsive">
-          <table id="dataTable">
-            <thead>
-              <tr>
-                <th>Tanggal</th>
-                <th>NIK</th>
-                <th>Mekanik</th>
-                <th>Factory</th>
-                <th>Area</th>
-                <th>ID Mesin</th>
-                <th>Masalah</th>
-                <th>Tindakan</th>
-                <th>Mulai</th>
-                <th>Selesai</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+    <section id="tabel" class="section">
+      <h2>Tabel Data Downtime</h2>
+      <div class="filter-grid">
+        <div class="form-group">
+          <label for="filterNama">Nama Mekanik</label>
+          <input type="text" id="filterNama" class="filter-input">
         </div>
+        <div class="form-group">
+          <label for="filterTanggal">Tanggal</label>
+          <input type="date" id="filterTanggal" class="filter-input">
+        </div>
+        <div class="form-group">
+          <label for="filterFactory">Factory</label>
+          <select id="filterFactory" class="filter-input">
+            <option value="">Semua Factory</option>
+            <option value="F1">F1</option>
+            <option value="F2">F2</option>
+            <option value="F3">F3</option>
+            <option value="F4">F4</option>
+            <option value="WAREHOUSE">WAREHOUSE</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="filterArea">Area</label>
+          <select id="filterArea" class="filter-input">
+            <option value="">Semua Area</option>
+            <option value="ACCESSORIES">ACCESSORIES</option>
+            <option value="CCS">CCS</option>
+            <option value="CUTTING">CUTTING</option>
+            <option value="CUTTING UPS">CUTTING UPS</option>
+            <option value="EMBROIDERY UPS">EMBROIDERY UPS</option>
+            <option value="HF WELDING">HF WELDING</option>
+            <option value="LAMINATING">LAMINATING</option>
+            <option value="LCA">LCA</option>
+            <option value="MCC">MCC</option>
+            <option value="NOSEW">NOSEW</option>
+            <option value="PRINTING">PRINTING</option>
+            <option value="STITCHING">STITCHING</option>
+          </select>
+        </div>
+      <h3>
+        <button onclick="applyFilter()" class="btn-cari">
+          🔍 Cari
+        </button>
+        <button onclick="resetFilterTabel()" class="btn-cari" style="background: #dc3545;">
+          🔄 Reset
+        </button>
+      </h3>
+
+      <div class="table-responsive">
+        <table id="dataTable">
+          <div id="cardTableContainer" class="card-table" style="display:none;"></div>
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>NIK</th>
+              <th>Mekanik</th>
+              <th>Factory</th>
+              <th>Area</th>
+              <th>ID Mesin</th>
+              <th>Masalah</th>
+              <th>Tindakan</th>
+              <th>Mulai</th>
+              <th>Selesai</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </section>
 
     <section id="grafik" class="section">
@@ -598,6 +604,12 @@
     const form = document.getElementById('inputForm');
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+
+      const btn = document.getElementById('submitBtn');
+      const spinner = document.getElementById('loadingSpinner');
+      btn.disabled = true;
+      spinner.style.display = 'inline';
+
       let data = Object.fromEntries(new FormData(form).entries());
 
       const nikCleaned = data.nik.replace(/^0+/, ""); // hapus nol di depan
@@ -628,6 +640,8 @@
       data.timestamp = Date.now();
       await push(ref(db, "downtime"), data);
       alert("Data berhasil dikirim");
+      btn.disabled = false;
+      spinner.style.display = 'none';
       form.reset();
     });
 
@@ -637,8 +651,7 @@
     function isFilterActiveTabel() {
       return (
         document.getElementById('filterNama').value.trim() !== "" ||
-        document.getElementById('filterTanggalFrom').value !== "" ||
-        document.getElementById('filterTanggalTo').value !== "" ||
+        document.getElementById('filterTanggal').value !== "" ||
         document.getElementById('filterFactory').value !== "" ||
         document.getElementById('filterArea').value !== ""
       );
@@ -666,37 +679,61 @@
       );
     }
 
-    function renderTable(data = allData) {
-      tableBody.innerHTML = "";
-
-      const today = new Date();
-      const nowdate = today.toLocaleDateString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('-');
-
-      let filtered = data;
-
-      if (!isFilterActiveTabel()) {
-        filtered = data.filter(row => row.tanggal === nowdate);
-      }
-
-      filtered.forEach(row => {
-        const mekanik = karyawanMap[row.nik] || "Unknown";
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${row.tanggal}</td>
-          <td>${row.nik}</td>
-          <td>${mekanik}</td>
-          <td>${row.Factory}</td>
-          <td>${row.area}</td>
-          <td>${row.idMesin}</td>
-          <td>${row.masalah}</td>
-          <td>${row.tindakan}</td>
-          <td>${row.mulai}</td>
-          <td>${row.selesai}</td>
+    // Card View Renderer
+    function renderCardView(data) {
+      const container = document.getElementById('cardTableContainer');
+      container.innerHTML = '';
+      data.forEach(row => {
+        const card = document.createElement('div');
+        card.className = 'card-summary';
+        card.innerHTML = `
+          <h4>${karyawanMap[row.nik] || 'Unknown'}</h4>
+          <p><strong>Tanggal:</strong> ${row.tanggal}</p>
+          <p><strong>Factory:</strong> ${row.Factory}</p>
+          <p><strong>Area:</strong> ${row.area}</p>
+          <p><strong>Mesin:</strong> ${row.idMesin}</p>
+          <p><strong>Masalah:</strong> ${row.masalah}</p>
+          <p><strong>Waktu:</strong> ${row.mulai} - ${row.selesai}</p>
         `;
-        tableBody.appendChild(tr);
+        container.appendChild(card);
       });
+    }
 
-      renderChart(filtered);
+    function renderTable(data = allData) {
+      const isMobile = window.innerWidth <= 576;
+      if (isMobile) {
+        renderCardView(data);
+      } else {
+        tableBody.innerHTML = "";
+
+        const today = new Date();
+        const nowdate = today.toLocaleDateString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('-');
+
+        let filtered = data;
+
+        if (!isFilterActiveTabel()) {
+          filtered = data.filter(row => row.tanggal === nowdate);
+        }
+
+        filtered.forEach(row => {
+          const mekanik = karyawanMap[row.nik] || "Unknown";
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${row.tanggal}</td>
+            <td>${row.nik}</td>
+            <td>${mekanik}</td>
+            <td>${row.Factory}</td>
+            <td>${row.area}</td>
+            <td>${row.idMesin}</td>
+            <td>${row.masalah}</td>
+            <td>${row.tindakan}</td>
+            <td>${row.mulai}</td>
+           <td>${row.selesai}</td>
+         `;
+          tableBody.appendChild(tr);
+        });
+      }  
+        renderChart(filtered);
     }
 
     function applyGrafikFilter() {
@@ -808,6 +845,13 @@
       });
     }
 
+    function resizeChart() {
+      if (chart) {
+        chart.destroy();
+      }
+      applyGrafikFilter(); // Ini akan memanggil renderChart() ulang dengan data yang sama
+    }
+
     function renderSummary(filtered) {
       const summaryDiv = document.getElementById("summaryContent");
       summaryDiv.innerHTML = "";
@@ -838,20 +882,18 @@
       });
     }
 
-    function applyFilterTabel() {
+    function applyFilter() {
       const nama = document.getElementById('filterNama').value.toLowerCase();
-      const tanggalFrom = document.getElementById('filterTanggalFrom').value;
-      const tanggalTo = document.getElementById('filterTanggalTo').value;
+      const tanggal = document.getElementById('filterTanggal').value;
       const Factory = document.getElementById('filterFactory').value.toUpperCase();
       const area = document.getElementById('filterArea').value;
 
       const filtered = allData.filter(d => {
         const mekanik = (karyawanMap[d.nik] || "").toLowerCase();
         return (!nama || mekanik.includes(nama)) &&
-           (!tanggalFrom || d.tanggal >= tanggalFrom) &&
-           (!tanggalTo || d.tanggal <= tanggalTo) &&
-           (!Factory || d.Factory === Factory) &&
-           (!area || d.area === area);
+            (!tanggal || d.tanggal === tanggal) &&
+            (!Factory || d.Factory === Factory) &&
+            (!area || d.area === area);
       });
 
       renderTable(filtered);
@@ -859,11 +901,10 @@
 
     function resetFilterTabel() {
       document.getElementById('filterNama').value = "";
-      document.getElementById('filterTanggalFrom').value = '';
-      document.getElementById('filterTanggalTo').value = '';
+      document.getElementById('filterTanggal').value = "";
       document.getElementById('filterFactory').value = "";
       document.getElementById('filterArea').value = "";
-      applyFilterTabel();
+      applyFilter();
     }
 
     function resetFilterSummary() {
@@ -1020,7 +1061,7 @@
       applyGrafikFilter();  
     });
 
-    window.applyFilterTabel = applyFilterTabel;
+    window.applyFilter = applyFilter;
     window.applyGrafikFilter = applyGrafikFilter;
     window.applySummaryFilter = applySummaryFilter;
     window.applyTopIdMesinFilter = applyTopIdMesinFilter;
@@ -1028,6 +1069,10 @@
     window.resetFilterSummary = resetFilterSummary;
     window.resetFilterTopIdMesin = resetFilterTopIdMesin;
     window.resetFilterGrafik = resetFilterGrafik;
+    window.addEventListener('resize', () => {
+      renderTable()
+      resizeChart();
+    });
   </script>
 
   <script>
@@ -1044,26 +1089,35 @@
       sub.style.display = sub.style.display === "none" ? "block" : "none";
     }
 
-    function showSection(id) {
-      document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
-    }
-
-      function toggleSubmenu() {
+    function toggleSubmenu() {
       const sub = document.getElementById("submenu");
       sub.style.display = sub.style.display === "none" ? "block" : "none";
     }
 
-      document.querySelectorAll('.sidebar ul li').forEach(li => {
-        li.addEventListener('click', function () {
+    document.querySelectorAll('.sidebar ul li').forEach(li => {
+      li.addEventListener('click', function () {
         document.querySelectorAll('.sidebar ul li').forEach(item => item.classList.remove('active'));
         this.classList.add('active');
-        });
       });
+    });
 
       const sidebar = document.querySelector(".sidebar");
       const main = document.querySelector(".main");
       const btn = document.getElementById("toggleSidebar");
+
+    const overlay = document.getElementById('overlay');
+      btn.addEventListener("click", () => {
+        if (window.innerWidth <= 576) {
+          sidebar.classList.toggle("active");
+        } else {
+            sidebar.classList.toggle("collapsed");
+            sidebar.classList.toggle("hidden");
+            main.classList.toggle("expanded");
+          }
+      });
+      overlay.addEventListener("click", () => {
+        sidebar.classList.remove("active");
+      });
 
       if (sidebar.classList.contains("collapsed") || sidebar.classList.contains("hidden")) {
         btn.style.left = "70px";
@@ -1076,31 +1130,20 @@
       }
 
       btn.addEventListener("click", () => {
-        if (window.innerWidth <= 576) {
-          sidebar.classList.toggle("active"); // Mobile behavior: Slide-in/out
-          sidebar.classList.toggle("hidden");
-        } else {
-            sidebar.classList.toggle("collapsed"); // Desktop behavior: Collapse/Expand width
-            main.classList.toggle("expanded");
-            sidebar.classList.toggle("hidden");
-          }
+      sidebar.classList.toggle("collapsed");
+      sidebar.classList.toggle("hidden");
+      main.classList.toggle("expanded");
 
-        window.addEventListener("resize", () => {
-          if (window.innerWidth > 576) {
-            sidebar.classList.remove("active"); // Reset mobile sidebar if resized back to desktop
-          }
-        });
-      
-        if (sidebar.classList.contains("collapsed")) {
-          btn.style.left = "70px";
-          btn.style.background = "rgba(0, 0, 0, 0.75)";
-          btn.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.4)";
-        } else {
-            btn.style.left = "180px";
-            btn.style.background = "rgba(0, 0, 0, 0.5)";
-            btn.style.boxShadow = "none";
-          }
-      });
+      if (sidebar.classList.contains("collapsed")) {
+        btn.style.left = "70px";
+        btn.style.background = "rgba(0, 0, 0, 0.75)";
+        btn.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.4)";
+      } else {
+        btn.style.left = "180px";
+        btn.style.background = "rgba(0, 0, 0, 0.5)";
+        btn.style.boxShadow = "none";
+      }
+    });
   </script>
 </body>
 </html>
