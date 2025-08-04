@@ -701,11 +701,14 @@
         card.innerHTML = `
           <h4>${karyawanMap[row.nik] || 'Unknown'}</h4>
           <p><strong>Tanggal:</strong> ${row.tanggal}</p>
+          <p><strong>Mekanik:</strong> ${mekanik}</p>
           <p><strong>Factory:</strong> ${row.Factory}</p>
           <p><strong>Area:</strong> ${row.area}</p>
           <p><strong>Mesin:</strong> ${row.idMesin}</p>
           <p><strong>Masalah:</strong> ${row.masalah}</p>
-          <p><strong>Waktu:</strong> ${row.mulai} - ${row.selesai}</p>
+          <p><strong>Tindakan:</strong> ${row.tindakan}</p>
+          <p><strong>Mulai:</strong> ${row.mulai}</p>
+          <p><strong>Selesai:</strong> ${row.selesai}</p>
         `;
         container.appendChild(card);
       });
