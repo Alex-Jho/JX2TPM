@@ -149,6 +149,15 @@
       padding: 16px;
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      white-space: normal;
+      overflow: hidden;
+      padding: 10px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 15px;
     }
 
     .card-summary h4 {
@@ -717,39 +726,45 @@
 
     function renderTable(data = allData) {
       const isMobile = window.innerWidth <= 576;
+      const today = new Date();
+      const nowdate = today.toLocaleDateString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('-');
+
+      let filtered = data;
+
       if (isMobile) {
         renderCardView(data);
       } else {
-        tableBody.innerHTML = "";
+          tableBody.innerHTML = "";
 
-        const today = new Date();
-        const nowdate = today.toLocaleDateString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('-');
+          if (!isFilterActiveTabel()) {
+            filtered = data.filter(row => row.tanggal === nowdate);
+          }
 
-        let filtered = data;
+          if (isMobile) {
+            renderCardView(filtered);  // <-- Pastikan CardView pakai data hasil filter
+          } else {
+              tableBody.innerHTML = "";
 
-        if (!isFilterActiveTabel()) {
-          filtered = data.filter(row => row.tanggal === nowdate);
+              filtered.forEach(row => {
+                const mekanik = karyawanMap[row.nik] || "Unknown";
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                  <td>${row.tanggal}</td>
+                  <td>${row.nik}</td>
+                  <td>${mekanik}</td>
+                  <td>${row.Factory}</td>
+                  <td>${row.area}</td>
+                  <td>${row.idMesin}</td>
+                  <td>${row.masalah}</td>
+                  <td>${row.tindakan}</td>
+                  <td>${row.mulai}</td>
+                  <td>${row.selesai}</td>
+                `;
+                tableBody.appendChild(tr);
+              });
+            }  
+          renderChart(filtered);
         }
-
-        filtered.forEach(row => {
-          const mekanik = karyawanMap[row.nik] || "Unknown";
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${row.tanggal}</td>
-            <td>${row.nik}</td>
-            <td>${mekanik}</td>
-            <td>${row.Factory}</td>
-            <td>${row.area}</td>
-            <td>${row.idMesin}</td>
-            <td>${row.masalah}</td>
-            <td>${row.tindakan}</td>
-            <td>${row.mulai}</td>
-           <td>${row.selesai}</td>
-         `;
-          tableBody.appendChild(tr);
-        });
-      }  
-        renderChart(filtered);
     }
 
     function applyGrafikFilter() {
