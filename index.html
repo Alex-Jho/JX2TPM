@@ -394,7 +394,6 @@
 <body>
   <button id="toggleSidebar" aria-label="Toggle Sidebar">☰</button>
   <div class="sidebar">
-  <div id="overlay"></div>
     <h2>MENU</h2>
     <ul>
       <li onclick="showSection('input')">
@@ -429,6 +428,7 @@
       </li>
     </ul>
   </div>
+  <div id="overlay"></div>
 
   <div class="main">
     <section id="input" class="section active">
@@ -905,6 +905,7 @@
       document.getElementById('filterFactory').value = "";
       document.getElementById('filterArea').value = "";
       applyFilter();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function resetFilterSummary() {
@@ -1089,11 +1090,6 @@
       sub.style.display = sub.style.display === "none" ? "block" : "none";
     }
 
-    function toggleSubmenu() {
-      const sub = document.getElementById("submenu");
-      sub.style.display = sub.style.display === "none" ? "block" : "none";
-    }
-
     document.querySelectorAll('.sidebar ul li').forEach(li => {
       li.addEventListener('click', function () {
         document.querySelectorAll('.sidebar ul li').forEach(item => item.classList.remove('active'));
@@ -1105,45 +1101,46 @@
       const main = document.querySelector(".main");
       const btn = document.getElementById("toggleSidebar");
 
-    const overlay = document.getElementById('overlay');
+      const overlay = document.getElementById('overlay');
+      
       btn.addEventListener("click", () => {
         if (window.innerWidth <= 576) {
           sidebar.classList.toggle("active");
         } else {
             sidebar.classList.toggle("collapsed");
-            sidebar.classList.toggle("hidden");
             main.classList.toggle("expanded");
           }
       });
+
       overlay.addEventListener("click", () => {
         sidebar.classList.remove("active");
       });
-
-      if (sidebar.classList.contains("collapsed") || sidebar.classList.contains("hidden")) {
-        btn.style.left = "70px";
-        btn.style.background = "rgba(0, 0, 0, 0.75)";
-        btn.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.4)";
-      } else {
-        btn.style.left = "180px";
-        btn.style.background = "rgba(0, 0, 0, 0.5)";
-        btn.style.boxShadow = "none";
-      }
-
-      btn.addEventListener("click", () => {
-      sidebar.classList.toggle("collapsed");
-      sidebar.classList.toggle("hidden");
-      main.classList.toggle("expanded");
 
       if (sidebar.classList.contains("collapsed")) {
         btn.style.left = "70px";
         btn.style.background = "rgba(0, 0, 0, 0.75)";
         btn.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.4)";
       } else {
-        btn.style.left = "180px";
-        btn.style.background = "rgba(0, 0, 0, 0.5)";
-        btn.style.boxShadow = "none";
-      }
-    });
+          btn.style.left = "180px";
+          btn.style.background = "rgba(0, 0, 0, 0.5)";
+          btn.style.boxShadow = "none";
+        }
+
+      btn.addEventListener("click", () => {
+        sidebar.classList.toggle("collapsed");
+        sidebar.classList.toggle("hidden");
+        main.classList.toggle("expanded");
+
+        if (sidebar.classList.contains("collapsed")) {
+          btn.style.left = "70px";
+          btn.style.background = "rgba(0, 0, 0, 0.75)";
+          btn.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.4)";
+        } else {
+            btn.style.left = "180px";
+            btn.style.background = "rgba(0, 0, 0, 0.5)";
+            btn.style.boxShadow = "none";
+          }
+      });
   </script>
 </body>
 </html>
