@@ -696,12 +696,12 @@
       const container = document.getElementById('cardTableContainer');
       container.innerHTML = '';
       data.forEach(row => {
+        const mekanik = karyawanMap[row.nik] || 'Unknown';
         const card = document.createElement('div');
         card.className = 'card-summary';
         card.innerHTML = `
-          <h4>${karyawanMap[row.nik] || 'Unknown'}</h4>
+          <h4>${mekanik}</h4>
           <p><strong>Tanggal:</strong> ${row.tanggal}</p>
-          <p><strong>Mekanik:</strong> ${mekanik}</p>
           <p><strong>Factory:</strong> ${row.Factory}</p>
           <p><strong>Area:</strong> ${row.area}</p>
           <p><strong>Mesin:</strong> ${row.idMesin}</p>
