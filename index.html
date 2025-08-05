@@ -225,10 +225,17 @@
     .filter-group {
       display: flex;
       flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 16px;
-      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      align-items: flex-start;
+      flex-direction: column;
     }
+
+    .filter-group label {
+      width: 100%;
+      margin-bottom: 4px;
+    }
+
 
     .filter-input {
       padding: 10px 14px;
@@ -266,6 +273,7 @@
       flex: 1 1 220px;
       display: flex;
       flex-direction: column;
+      margin-bottom: 6px;
     }
 
 
@@ -401,10 +409,6 @@
       margin-bottom: 20px;
     }
 
-    .filter-group {
-      margin-bottom: 20px;
-    }
-
     body {
       font-size: clamp(14px, 2vw, 16px);
     }
@@ -487,7 +491,7 @@
             <option value="PRINTING">PRINTING</option>
             <option value="STITCHING">STITCHING</option>
           </select>
-          <label>ID Mesin:</label>
+          <label for="idMesinInput">ID Mesin:</label>
           <input type="text" name="idMesin" id="idMesinInput" list="idMesinOptions" required>
           <datalist id="idMesinOptions"></datalist>
           <label>Masalah:</label>
@@ -508,15 +512,15 @@
       <h2>Tabel Data Downtime</h2>
         <div class="filter-grid">
           <div class="form-group">
-            <label for="filterNama">Nama Mekanik</label>
+            <label for="filterNama">Nama Mekanik:</label>
             <input type="text" id="filterNama" class="filter-input">
           </div>
           <div class="form-group">
-            <label for="filterTanggal">Tanggal</label>
+            <label for="filterTanggal">Tanggal:</label>
             <input type="date" id="filterTanggal" class="filter-input">
           </div>
           <div class="form-group">
-            <label for="filterFactory">Factory</label>
+            <label for="filterFactory">Factory:</label>
             <select id="filterFactory" class="filter-input">
               <option value="">Semua Factory</option>
               <option value="F1">F1</option>
@@ -527,7 +531,7 @@
             </select>
           </div>
           <div class="form-group">
-            <label for="filterArea">Area</label>
+            <label for="filterArea">Area:</label>
             <select id="filterArea" class="filter-input">
               <option value="">Semua Area</option>
               <option value="ACCESSORIES">ACCESSORIES</option>
@@ -580,32 +584,61 @@
 
     <section id="grafik" class="section">
       <h2>Grafik Data Downtime</h2>
-      <div class="filter-group">
-        <input type="date" id="filterGrafikFrom" class="filter-input">
-        <input type="date" id="filterGrafikTo" class="filter-input">
-        <button onclick="applyGrafikFilter()" class="btn-cari">🔍 Cari</button>
-        <button onclick="resetFilterGrafik()" class="btn-cari" style="background: #dc3545;">🔄 Reset</button>
-      </div>
+        <div class="filter-grid">
+          <div class="filter-group">
+            <label for="filterGrafikFrom">Dari Tanggal:</label>
+            <input type="date" id="filterGrafikFrom" class="filter-input">
+          </div>
+          <div class="filter-group">
+            <label for="filterGrafikTo">Ke Tanggal:</label>
+            <input type="date" id="filterGrafikTo" class="filter-input">
+          </div>
+        </div>
+      <h3>
+          <button onclick="applyGrafikFilter()" class="btn-cari">
+            🔍 Cari
+          </button>
+          <button onclick="resetFilterGrafik()" class="btn-cari" style="background: #dc3545;">
+            🔄 Reset
+          </button>
+      </h3>  
       <canvas id="chart" height="120"></canvas>
       <div id="summaryContent"></div>
     </section>
 
     <section id="summary" class="section">
       <h2>Summary Input Downtime per Mekanik</h2>
-      <div class="filter-group">
-        <input type="text" id="filterSummaryNama" placeholder="Nama Mekanik" class="filter-input">
-        <input type="date" id="filterSummaryFrom" class="filter-input">
-        <input type="date" id="filterSummaryTo" class="filter-input">
-        <button onclick="applySummaryFilter()" class="btn-cari">🔍 Cari</button>
-        <button onclick="resetFilterSummary()" class="btn-cari" style="background: #dc3545;">🔄 Reset</button>
-      </div>
+        <div class="filter-grid">
+          <div class="filter-group">
+            <label for="filterSummaryNama">Mekanik:</label>
+            <input type="text" id="filterSummaryNama" placeholder="Nama Mekanik" class="filter-input">
+          </div>
+          <div class="filter-group">
+            <label for="filterSummaryFrom">Dari Tanggal:</label>
+            <input type="date" id="filterSummaryFrom" class="filter-input">
+          </div>
+          <div class="filter-group">
+            <label for="filterSummaryTo">Ke Tanggal:</label>
+            <input type="date" id="filterSummaryTo" class="filter-input">
+          </div>
+        </div>
+      <h3>
+        <button onclick="applySummaryFilter()" class="btn-cari">
+          🔍 Cari
+        </button>
+        <button onclick="resetFilterSummary()" class="btn-cari" style="background: #dc3545;">
+          🔄 Reset
+        </button>
+      </h3>
       <div id="summaryContainer"></div>
     </section>
 
     <section id="topmesin" class="section">
       <h2>Summary Top 5 ID Mesin</h2>
       <div class="filter-group">
+        <label for="filterTopFrom">Dari Tanggal:</label>
         <input type="date" id="filterTopFrom" class="filter-input">
+        <label for="filterTopTo">Ke Tanggal:</label>
         <input type="date" id="filterTopTo" class="filter-input">
         <button onclick="applyTopIdMesinFilter()" class="btn-cari">🔍 Cari</button>
         <button onclick="resetFilterTopIdMesin()" class="btn-cari" style="background: #dc3545;">🔄 Reset</button>
@@ -689,6 +722,7 @@
     });
 
     let allData = [];
+    let currentFilteredData = null;
     const tableBody = document.querySelector("#dataTable tbody");
 
     function isFilterActiveTabel() {
@@ -751,7 +785,13 @@
       
       let filtered = data;
 
-      if (!isFilterActiveTabel()) {
+      // Jika ada data filter aktif, gunakan itu
+      if (currentFilteredData !== null && !forceShowAll) {
+        filtered = currentFilteredData;
+      }
+
+      // Jika tidak ada filter aktif, pakai default logic tanggal hari ini
+      if (!isFilterActiveTabel() && !forceShowAll && currentFilteredData === null) {
         const today = new Date();
         const nowdate = today.toLocaleDateString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('-');
         filtered = data.filter(row => row.tanggal === nowdate);
@@ -784,6 +824,8 @@
     }
 
     function applyGrafikFilter() {
+      if (allData.length === 0) return;
+
       const from = document.getElementById("filterGrafikFrom").value;
       const to = document.getElementById("filterGrafikTo").value;
 
@@ -956,6 +998,8 @@
             (!area || d.area === area);
       });
 
+      currentFilteredData = filtered;
+
       // ➜ CEK JIKA TIDAK ADA DATA
       if (filtered.length === 0) {
         alert("Tidak ditemukan data");
@@ -969,6 +1013,9 @@
       document.getElementById('filterTanggal').value = "";
       document.getElementById('filterFactory').value = "";
       document.getElementById('filterArea').value = "";
+
+      currentFilteredData = null;  // <-- Reset state filter
+
       renderTable(allData, true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
