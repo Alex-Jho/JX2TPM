@@ -635,14 +635,24 @@
 
     <section id="topmesin" class="section">
       <h2>Summary Top 5 ID Mesin</h2>
-      <div class="filter-group">
-        <label for="filterTopFrom">Dari Tanggal:</label>
-        <input type="date" id="filterTopFrom" class="filter-input">
-        <label for="filterTopTo">Ke Tanggal:</label>
-        <input type="date" id="filterTopTo" class="filter-input">
-        <button onclick="applyTopIdMesinFilter()" class="btn-cari">🔍 Cari</button>
-        <button onclick="resetFilterTopIdMesin()" class="btn-cari" style="background: #dc3545;">🔄 Reset</button>
-      </div>
+        <div class="filter-grid">
+          <div class="filter-group">
+            <label for="filterTopFrom">Dari Tanggal:</label>
+            <input type="date" id="filterTopFrom" class="filter-input">
+          </div>
+          <div class="filter-group">
+            <label for="filterTopTo">Ke Tanggal:</label>
+            <input type="date" id="filterTopTo" class="filter-input">
+          </div>
+        </div>
+      <h3>
+        <button onclick="applyTopIdMesinFilter()" class="btn-cari">
+          🔍 Cari
+        </button>
+        <button onclick="resetFilterTopIdMesin()" class="btn-cari" style="background: #dc3545;">
+          🔄 Reset
+        </button>
+      </h3>
       <div id="topIdMesinContainer"></div>
     </section>
 
