@@ -118,7 +118,7 @@
     }
 
     .main {
-      margin-left: 160px;
+      margin-left: 30px;
       padding: 30px;
       flex-grow: 1;
       padding-top: 60px;
@@ -131,8 +131,8 @@
 
     .section {
       display: none;
-      flex-direction: column;  /* Tumpuk ke bawah */
-      gap: 20px;               /* Jarak antar filter dan tabel */
+      flex-direction: column;
+      gap: 20px;
     }
 
     .section.active {
@@ -484,7 +484,8 @@
             <option value="PRINTING">PRINTING</option>
             <option value="STITCHING">STITCHING</option>
           </select>
-          <input type="text" name="idMesin" placeholder="ID Mesin" required>
+          <input type="text" name="idMesin" id="idMesinInput" list="idMesinOptions" placeholder="ID Mesin" required>
+          <datalist id="idMesinOptions"></datalist>
           <input type="text" name="masalah" placeholder="Masalah" required>
           <input type="text" name="tindakan" placeholder="Tindakan" required>
           <input type="text" name="sparepart" placeholder="Sparepart" required>
@@ -642,6 +643,8 @@
       const nikCleaned = data.nik.replace(/^0+/, ""); // hapus nol di depan
       if (!karyawanMap[nikCleaned]) {
         alert("NIK tidak ditemukan di database!");
+        btn.disabled = false;
+        spinner.style.display = 'none';
         return;
       }
 
@@ -665,14 +668,20 @@
       .join('-');
       data.tanggal = tanggalLocal;
       data.timestamp = Date.now();
-      await push(ref(db, "downtime"), data);
+
+      const bulan = today.toLocaleString('id-ID', { month: 'long' });
+      const tahun = today.getFullYear();
+      const nodeBulan = `downtime_${bulan.toLowerCase()}_${tahun}`;
+
+      await push(ref(db, `downtime/${nodeBulan}`), data);
+
       alert("Data berhasil dikirim");
       btn.disabled = false;
       spinner.style.display = 'none';
       form.reset();
     });
 
-    const allData = [];
+    let allData = [];
     const tableBody = document.querySelector("#dataTable tbody");
 
     function isFilterActiveTabel() {
@@ -730,21 +739,21 @@
       });
     }
 
-    function renderTable(data = allData) {
+    function renderTable(data = allData, forceShowAll = false) {
       const isMobile = window.innerWidth <= 576;
-      const today = new Date();
-      const nowdate = today.toLocaleDateString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('-');
-
+      
       let filtered = data;
 
       if (!isFilterActiveTabel()) {
+        const today = new Date();
+        const nowdate = today.toLocaleDateString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('-');
         filtered = data.filter(row => row.tanggal === nowdate);
       }
 
       if (isMobile) {
         renderCardView(filtered);  // <-- Pastikan CardView pakai data hasil filter
       } else {
-          tableBody.innerHTML = "";
+          tableBody.innerHTML = '';
           filtered.forEach(row => {
             const mekanik = karyawanMap[row.nik] || "Unknown";
             const tr = document.createElement("tr");
@@ -777,10 +786,23 @@
         const today = new Date();
         const nowdate = today.toLocaleDateString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('-');
         source = allData.filter(row => row.tanggal === nowdate);
+
+        if (source.length === 0) {
+          alert("Tidak ditemukan data grafik");
+          if (chart) chart.destroy(); // Hapus chart jika ada
+          return;
+        }
+
       } else {
           source = allData.filter(row => {
             return (!from || row.tanggal >= from) && (!to || row.tanggal <= to);
           });
+
+          if (source.length === 0) {
+            alert("Tidak ditemukan data grafik");
+            if (chart) chart.destroy(); // Hapus chart jika ada
+            return;
+          }
         }
 
       const areaMap = {};
@@ -927,6 +949,11 @@
             (!area || d.area === area);
       });
 
+      // ➜ CEK JIKA TIDAK ADA DATA
+      if (filtered.length === 0) {
+        alert("Tidak ditemukan data");
+      }
+
       renderTable(filtered);
     }
 
@@ -935,7 +962,7 @@
       document.getElementById('filterTanggal').value = "";
       document.getElementById('filterFactory').value = "";
       document.getElementById('filterArea').value = "";
-      applyFilter();
+      renderTable(allData, true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -958,7 +985,6 @@
       document.getElementById('filterGrafikFrom').value = "";
       document.getElementById('filterGrafikTo').value = "";
       applyGrafikFilter();
-      renderChart(areaMap);
     }
 
     function applySummaryFilter() {
@@ -972,7 +998,15 @@
       let filtered = allData;
 
       if (!isFilterActiveSummary()) {
+        const today = new Date();
+        const nowdate = today.toLocaleDateString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('-');
         filtered = allData.filter(row => row.tanggal === nowdate);
+
+        if (filtered.length === 0) {
+          alert("Tidak ditemukan data summary");
+          document.getElementById("summaryContainer").innerHTML = "<p>Tidak ditemukan data summary.</p>";
+          return;
+        }
       } else {
           filtered = allData.filter(row => {
             const mekanik = (karyawanMap[row.nik] || "").toLowerCase();
@@ -980,6 +1014,11 @@
                   (!from || row.tanggal >= from) &&
                   (!to || row.tanggal <= to);
           });
+          if (filtered.length === 0) {
+            alert("Tidak ditemukan data summary");
+            document.getElementById("summaryContainer").innerHTML = "<p>Tidak ditemukan data summary.</p>";
+            return;
+          }
         }
 
       const summaryContainer = document.getElementById("summaryContainer");
@@ -1024,10 +1063,20 @@
 
       if (!isFilterActiveTopMesin()) {
         filtered = allData.filter(row => row.tanggal === nowdate);
+        if (filtered.length === 0) {
+          alert("Tidak ditemukan data top ID mesin");
+          document.getElementById("topIdMesinContainer").innerHTML = "<p>Tidak ditemukan data top ID mesin.</p>";
+          return;
+        }
       } else {
           filtered = allData.filter(row => {
             return (!from || row.tanggal >= from) && (!to || row.tanggal <= to);
           });
+          if (filtered.length === 0) {
+            alert("Tidak ditemukan data top ID mesin");
+            document.getElementById("topIdMesinContainer").innerHTML = "<p>Tidak ditemukan data top ID mesin.</p>";
+            return;
+          }
         }
 
       const container = document.getElementById("topIdMesinContainer");
@@ -1059,6 +1108,27 @@
       karyawanMap = snapshot.val() || {};
     });
 
+    let idMesinList = [];
+
+    onValue(ref(db, "idMesinList"), snapshot => {
+      idMesinList = [];
+      snapshot.forEach(child => {
+        idMesinList.push(child.val());
+      });
+      populateIdMesinOptions(); 
+    });
+
+    function populateIdMesinOptions() {
+      const datalist = document.getElementById('idMesinOptions');
+      datalist.innerHTML = '';  // Clear existing options
+
+      idMesinList.forEach(id => {
+        const option = document.createElement('option');
+        option.value = id;
+        datalist.appendChild(option);
+      });
+    }
+
     const nikInput = document.querySelector('input[name="nik"]');
     const nikWarning = document.getElementById("nikWarning");
 
@@ -1079,18 +1149,22 @@
 
     onValue(ref(db, "downtime"), snapshot => {
       allData.length = 0;
-      snapshot.forEach(child => {
-        const val = child.val();
-        allData.push({
-          ...val,
-          id: child.key
+
+      snapshot.forEach(monthNode => {
+        monthNode.forEach(child => {
+          const val = child.val();
+          allData.push({
+            ...val,
+            id: child.key
+          });
         });
       });
-      
-      renderTable();
+
+      renderTable(allData);
       renderSummaryMekanik();
-      renderTopIdMesin();
-      applyGrafikFilter();  
+      renderTopIdMesin(allData);
+      applyGrafikFilter(); 
+
     });
 
     window.applyFilter = applyFilter;
@@ -1111,9 +1185,6 @@
     function showSection(id) {
       document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
       document.getElementById(id).classList.add('active');
-      
-      if (id === 'summary') renderSummary();
-      if (id === 'topmesin') renderTopMesin();
     }
 
     function toggleSubmenu() {
@@ -1149,7 +1220,8 @@
         sidebar.classList.toggle("active");
       } else {
           sidebar.classList.toggle("collapsed");
-          document.querySelector(".main").classList.toggle("expanded");
+          main.classList.toggle("expanded");
+          /*document.querySelector(".main").classList.toggle("expanded");*/
         }
     });
 
