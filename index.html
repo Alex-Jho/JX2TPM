@@ -459,8 +459,10 @@
     <section id="input" class="section active">
       <h2>Input Downtime</h2>
         <form id="inputForm">
-          <input type="text" name="nik" placeholder="NIK" required pattern="\d+" inputmode="numeric">
+          <label>NIK:</label>
+          <input type="text" name="nik" required pattern="\d+" inputmode="numeric">
           <small id="nikWarning" style="color: #e74c3c; font-style: italic; display: none;">NIK tidak ditemukan di database</small>
+          <label>Factory:</label>
           <select name="Factory" required>
             <option value="">Pilih Factory</option>
             <option value="F1">F1</option>
@@ -469,6 +471,7 @@
             <option value="F4">F4</option>
             <option value="WAREHOUSE">WAREHOUSE</option>
           </select>
+          <label>Area:</label>
           <select name="area" required>
             <option value="">Pilih Area</option>
             <option value="ACCESSORIES">ACCESSORIES</option>
@@ -484,11 +487,15 @@
             <option value="PRINTING">PRINTING</option>
             <option value="STITCHING">STITCHING</option>
           </select>
-          <input type="text" name="idMesin" id="idMesinInput" list="idMesinOptions" placeholder="ID Mesin" required>
+          <label>ID Mesin:</label>
+          <input type="text" name="idMesin" id="idMesinInput" list="idMesinOptions" required>
           <datalist id="idMesinOptions"></datalist>
-          <input type="text" name="masalah" placeholder="Masalah" required>
-          <input type="text" name="tindakan" placeholder="Tindakan" required>
-          <input type="text" name="sparepart" placeholder="Sparepart" required>
+          <label>Masalah:</label>
+          <input type="text" name="masalah" required>
+          <label>Tindakan:</label>
+          <input type="text" name="tindakan" required>
+          <label>Sparepart:</label>
+          <input type="text" name="sparepart" required>
           <label for="timestart">Waktu Mulai:</label>
           <input type="time" id="timestart" name="mulai" required>
           <label for="timeend">Waktu Selesai:</label>        
@@ -1163,8 +1170,9 @@
       renderTable(allData);
       renderSummaryMekanik();
       renderTopIdMesin(allData);
-      applyGrafikFilter(); 
-
+      if (allData.length > 0) {
+        applyGrafikFilter();  // Panggil hanya jika ada data
+      }
     });
 
     window.applyFilter = applyFilter;
