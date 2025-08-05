@@ -131,6 +131,8 @@
 
     .section {
       display: none;
+      flex-direction: column;  /* Tumpuk ke bawah */
+      gap: 20px;               /* Jarak antar filter dan tabel */
     }
 
     .section.active {
@@ -145,14 +147,15 @@
     }
 
     .card-summary {
-      background: white;
-      padding: 16px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       word-wrap: break-word;
       overflow-wrap: break-word;
       white-space: normal;
       overflow: hidden;
+      width: 100%;
+      background: white;
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       padding: 10px;
       background: #fff;
       border-radius: 8px;
@@ -256,7 +259,7 @@
     .filter-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 16px;
+      gap: 10px;
     }
 
     .filter-grid .form-group {
@@ -455,71 +458,19 @@
   <div class="main">
     <section id="input" class="section active">
       <h2>Input Downtime</h2>
-      <form id="inputForm">
-        <input type="text" name="nik" placeholder="NIK" required pattern="\d+" inputmode="numeric">
-        <small id="nikWarning" style="color: #e74c3c; font-style: italic; display: none;">NIK tidak ditemukan di database</small>
-        <select name="Factory" required>
-          <option value="">Pilih Factory</option>
-          <option value="F1">F1</option>
-          <option value="F2">F2</option>
-          <option value="F3">F3</option>
-          <option value="F4">F4</option>
-          <option value="WAREHOUSE">WAREHOUSE</option>
-        </select>
-        <select name="area" required>
-          <option value="">Pilih Area</option>
-          <option value="ACCESSORIES">ACCESSORIES</option>
-          <option value="CCS">CCS</option>
-          <option value="CUTTING">CUTTING</option>
-          <option value="CUTTING UPS">CUTTING UPS</option>
-          <option value="EMBROIDERY UPS">EMBROIDERY UPS</option>
-          <option value="HF WELDING">HF WELDING</option>
-          <option value="LAMINATING">LAMINATING</option>
-          <option value="LCA">LCA</option>
-          <option value="MCC">MCC</option>
-          <option value="NOSEW">NOSEW</option>
-          <option value="PRINTING">PRINTING</option>
-          <option value="STITCHING">STITCHING</option>
-        </select>
-        <input type="text" name="idMesin" placeholder="ID Mesin" required>
-        <input type="text" name="masalah" placeholder="Masalah" required>
-        <input type="text" name="tindakan" placeholder="Tindakan" required>
-        <input type="text" name="sparepart" placeholder="Sparepart" required>
-        <label for="timestart">Waktu Mulai:</label>
-        <input type="time" id="timestart" name="mulai" required>
-        <label for="timeend">Waktu Selesai:</label>        
-        <input type="time" id="timeend" name="selesai" required>
-        <button type="submit" id="submitBtn">Kirim <span id="loadingSpinner" style="display:none;">⏳</span></button>
-
-      </form>
-    </section>
-
-    <section id="tabel" class="section">
-      <h2>Tabel Data Downtime</h2>
-      <div class="filter-grid">
-        <div class="form-group">
-          <label for="filterNama">Nama Mekanik</label>
-          <input type="text" id="filterNama" class="filter-input">
-        </div>
-        <div class="form-group">
-          <label for="filterTanggal">Tanggal</label>
-          <input type="date" id="filterTanggal" class="filter-input">
-        </div>
-        <div class="form-group">
-          <label for="filterFactory">Factory</label>
-          <select id="filterFactory" class="filter-input">
-            <option value="">Semua Factory</option>
+        <form id="inputForm">
+          <input type="text" name="nik" placeholder="NIK" required pattern="\d+" inputmode="numeric">
+          <small id="nikWarning" style="color: #e74c3c; font-style: italic; display: none;">NIK tidak ditemukan di database</small>
+          <select name="Factory" required>
+            <option value="">Pilih Factory</option>
             <option value="F1">F1</option>
             <option value="F2">F2</option>
             <option value="F3">F3</option>
             <option value="F4">F4</option>
             <option value="WAREHOUSE">WAREHOUSE</option>
           </select>
-        </div>
-        <div class="form-group">
-          <label for="filterArea">Area</label>
-          <select id="filterArea" class="filter-input">
-            <option value="">Semua Area</option>
+          <select name="area" required>
+            <option value="">Pilih Area</option>
             <option value="ACCESSORIES">ACCESSORIES</option>
             <option value="CCS">CCS</option>
             <option value="CUTTING">CUTTING</option>
@@ -533,6 +484,58 @@
             <option value="PRINTING">PRINTING</option>
             <option value="STITCHING">STITCHING</option>
           </select>
+          <input type="text" name="idMesin" placeholder="ID Mesin" required>
+          <input type="text" name="masalah" placeholder="Masalah" required>
+          <input type="text" name="tindakan" placeholder="Tindakan" required>
+          <input type="text" name="sparepart" placeholder="Sparepart" required>
+          <label for="timestart">Waktu Mulai:</label>
+          <input type="time" id="timestart" name="mulai" required>
+          <label for="timeend">Waktu Selesai:</label>        
+          <input type="time" id="timeend" name="selesai" required>
+          <button type="submit" id="submitBtn">Kirim <span id="loadingSpinner" style="display:none;">⏳</span></button>
+        </form>
+    </section>
+
+    <section id="tabel" class="section">
+      <h2>Tabel Data Downtime</h2>
+        <div class="filter-grid">
+          <div class="form-group">
+            <label for="filterNama">Nama Mekanik</label>
+            <input type="text" id="filterNama" class="filter-input">
+          </div>
+          <div class="form-group">
+            <label for="filterTanggal">Tanggal</label>
+            <input type="date" id="filterTanggal" class="filter-input">
+          </div>
+          <div class="form-group">
+            <label for="filterFactory">Factory</label>
+            <select id="filterFactory" class="filter-input">
+              <option value="">Semua Factory</option>
+              <option value="F1">F1</option>
+              <option value="F2">F2</option>
+              <option value="F3">F3</option>
+              <option value="F4">F4</option>
+              <option value="WAREHOUSE">WAREHOUSE</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="filterArea">Area</label>
+            <select id="filterArea" class="filter-input">
+              <option value="">Semua Area</option>
+              <option value="ACCESSORIES">ACCESSORIES</option>
+              <option value="CCS">CCS</option>
+              <option value="CUTTING">CUTTING</option>
+              <option value="CUTTING UPS">CUTTING UPS</option>
+              <option value="EMBROIDERY UPS">EMBROIDERY UPS</option>
+              <option value="HF WELDING">HF WELDING</option>
+              <option value="LAMINATING">LAMINATING</option>
+              <option value="LCA">LCA</option>
+              <option value="MCC">MCC</option>
+              <option value="NOSEW">NOSEW</option>
+              <option value="PRINTING">PRINTING</option>
+              <option value="STITCHING">STITCHING</option>
+            </select>
+          </div>
         </div>
       <h3>
         <button onclick="applyFilter()" class="btn-cari">
@@ -541,6 +544,7 @@
         <button onclick="resetFilterTabel()" class="btn-cari" style="background: #dc3545;">
           🔄 Reset
         </button>
+        <button id="exportExcelBtn" class="btn-cari" style="background: #357ce6;">Export ke Excel</button>
       </h3>
 
       <div class="table-responsive">
@@ -555,6 +559,7 @@
               <th>ID Mesin</th>
               <th>Masalah</th>
               <th>Tindakan</th>
+              <th>Sparepart</th>
               <th>Mulai</th>
               <th>Selesai</th>
             </tr>
@@ -717,6 +722,7 @@
           <p><strong>Mesin:</strong> ${row.idMesin}</p>
           <p><strong>Masalah:</strong> ${row.masalah}</p>
           <p><strong>Tindakan:</strong> ${row.tindakan}</p>
+          <p><strong>Sparepart:</strong> ${row.sparepart}</p>
           <p><strong>Mulai:</strong> ${row.mulai}</p>
           <p><strong>Selesai:</strong> ${row.selesai}</p>
         `;
@@ -731,40 +737,34 @@
 
       let filtered = data;
 
+      if (!isFilterActiveTabel()) {
+        filtered = data.filter(row => row.tanggal === nowdate);
+      }
+
       if (isMobile) {
-        renderCardView(data);
+        renderCardView(filtered);  // <-- Pastikan CardView pakai data hasil filter
       } else {
           tableBody.innerHTML = "";
-
-          if (!isFilterActiveTabel()) {
-            filtered = data.filter(row => row.tanggal === nowdate);
-          }
-
-          if (isMobile) {
-            renderCardView(filtered);  // <-- Pastikan CardView pakai data hasil filter
-          } else {
-              tableBody.innerHTML = "";
-
-              filtered.forEach(row => {
-                const mekanik = karyawanMap[row.nik] || "Unknown";
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-                  <td>${row.tanggal}</td>
-                  <td>${row.nik}</td>
-                  <td>${mekanik}</td>
-                  <td>${row.Factory}</td>
-                  <td>${row.area}</td>
-                  <td>${row.idMesin}</td>
-                  <td>${row.masalah}</td>
-                  <td>${row.tindakan}</td>
-                  <td>${row.mulai}</td>
-                  <td>${row.selesai}</td>
-                `;
-                tableBody.appendChild(tr);
-              });
-            }  
-          renderChart(filtered);
-        }
+          filtered.forEach(row => {
+            const mekanik = karyawanMap[row.nik] || "Unknown";
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${row.tanggal}</td>
+              <td>${row.nik}</td>
+              <td>${mekanik}</td>
+              <td>${row.Factory}</td>
+              <td>${row.area}</td>
+              <td>${row.idMesin}</td>
+              <td>${row.masalah}</td>
+              <td>${row.tindakan}</td>
+              <td>${row.sparepart}</td>
+              <td>${row.mulai}</td>
+              <td>${row.selesai}</td>
+            `;
+            tableBody.appendChild(tr);
+          });
+        }  
+        renderChart(filtered);
     }
 
     function applyGrafikFilter() {
@@ -1128,6 +1128,16 @@
       });
     });
 
+    document.getElementById('exportExcelBtn').addEventListener('click', () => {
+      // Ambil data tabel (yang sedang tampil)
+      const table = document.getElementById('dataTable');
+      const wb = XLSX.utils.table_to_book(table, {sheet:"Data Downtime"});
+
+      // Save file Excel
+      XLSX.writeFile(wb, 'data-downtime.xlsx');
+    });
+
+
     const btn = document.getElementById("toggleSidebar");
     const sidebar = document.querySelector(".sidebar");
     const main = document.querySelector(".main");
@@ -1148,5 +1158,6 @@
     });
 
   </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </body>
 </html>
