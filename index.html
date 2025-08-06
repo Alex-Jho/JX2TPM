@@ -276,6 +276,24 @@
       margin-bottom: 6px;
     }
 
+    .result-container {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #f1f1f1;
+      border-radius: 5px;
+    }
+
+    .result {
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .result-label {
+      font-size: 16px;
+    }
 
     button {
       background: linear-gradient(135deg, #007bff, #00bfff);
@@ -350,6 +368,56 @@
       border-radius: 8px;
     }
 
+    /*Kode ini untuk Section Petunjuk Pengguna*/
+    #petunjuk {
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+      background: #f9f9f9;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    #petunjuk h2 {
+      font-size: 26px;
+      color: #357ce6;
+      border-bottom: 2px solid #357ce6;
+      padding-bottom: 8px;
+      display: inline-block;
+    }
+
+    #petunjuk p {
+      font-size: 16px;
+      line-height: 1.6;
+      margin-top: 16px;
+    }
+
+    #petunjuk ul {
+      list-style: none;
+      padding-left: 0;
+      margin-top: 16px;
+    }
+
+    #petunjuk ul li {
+      margin-bottom: 8px;
+      position: relative;
+      padding-left: 24px;
+    }
+
+    #petunjuk ul li::before {
+      content: '✔️ ';
+      margin-right: 6px;
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+
     /* Responsive Sidebar Mobile */
     @media (max-width: 576px) {
       .sidebar {
@@ -386,6 +454,19 @@
       .card-table {
         display: block !important;
         width: 100%;
+      }
+
+      #petunjuk {
+        padding: 16px;
+        margin: 0 10px;
+      }
+
+      #petunjuk h2 {
+        font-size: 22px;
+      }
+
+      #petunjuk p, #petunjuk ul li {
+        font-size: 14px;
       }
     }
 
@@ -455,12 +536,20 @@
         <span class="bi bi-cash-stack"></span>
         <span class="menu-text">Cek Gaji Bruto</span>
       </li>
+      <li onclick="showSection('lemburan')">
+        <span class="bi bi-clock-history"></span>
+        <span class="menu-text">Cek Overtime</span>
+      </li>
+      <li onclick="showSection('petunjuk')">
+        <span class="bi bi-info-circle"></span>
+        <span class="menu-text">Petunjuk Pengguna</span>
+      </li>
     </ul>
   </div>
   <div id="overlay"></div>
 
   <div class="main">
-    <section id="input" class="section active">
+    <section id="input" class="section">
       <h2>Input Downtime</h2>
         <form id="inputForm">
           <label>NIK:</label>
@@ -657,8 +746,73 @@
     </section>
 
     <section id="gaji" class="section">
-      <h2>Fitur Cek Gaji Bruto (Dalam Pengembangan)</h2>
-      <p>Fitur ini akan segera tersedia.</p>
+      <form id="inputForm">
+        <h2>Hitung Gaji Bruto</h2>
+          <div class="form-group">
+            <label for="gajiPokok">Gaji Pokok:</label>
+            <input type="text" id="gajiPokok" placeholder="Rp0">
+          </div>
+          <div class="form-group">
+            <label for="tunjangan">Tunjangan Jabatan:</label>
+            <input type="text" id="tunjangan" placeholder="Rp0">
+            </div>
+          <div class="form-group">
+            <label for="lembur1jam">Jumlah Lembur 1 Jam:</label>
+            <input type="number" id="lembur1jam" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label for="lembur2jam">Jumlah Lembur 2 Jam:</label>
+            <input type="number" id="lembur2jam" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label for="lembur3jam">Jumlah Lembur 3 Jam:</label>
+            <input type="number" id="lembur3jam" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label for="lembur4jam">Jumlah Lembur 4 Jam:</label>
+            <input type="number" id="lembur4jam" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label for="insentif">Insentif:</label>
+            <input type="text" id="insentif" placeholder="Rp0">
+            </div>
+        </form>
+          <button onclick="hitungGajiBruto()" class="btn-cari">
+            Hitung
+          </button>
+          <button class="btn-cari" onclick="resetForm()">
+            Input Data Baru
+          </button>
+
+        <div class="result-container">
+          <div class="result-label">Gaji Bruto:</div>
+          <div id="hasil" class="result"></div>
+        </div>
+    </section>
+
+    <section id="lemburan" class="section">
+      <h2>Fitur Cek Overtime (Dalam Pengembangan)</h2>
+      <p>Data informasi lemburan karyawan akan ditampilkan di sini.</p>
+    </section>
+    <section id="petunjuk" class="section active">
+      <h2>Petunjuk Pengguna</h2>
+      <p>Berikut adalah panduan penggunaan aplikasi untuk memantau dan mengelola downtime mesin:</p>
+        <ul>
+          <li><strong>Input Data Downtime:</strong> untuk mencatat data downtime mesin.</li>
+          <li><strong>Cek Data Downtime:</strong> untuk melihat semua data downtime yang sudah diinput.</li>
+          <li><strong>Tabel:</strong> Untuk monitoring data downtime berdasarkan Nama Mekanik, Tanggal, Factory, dan Area.</li>
+          <li><strong>Grafik:</strong> Untuk analisa data downtime secara visual berdasarkan Tanggal.</li>
+          <li><strong>Summary:</strong> Untuk monitoring input data oleh mekanik berdasarkan Nama Mekanik dan Tanggal.</li>
+          <li><strong>Top ID Mesin:</strong> Untuk monitoring data mesin yang paling sering rusak, berdasarkan Tanggal.</li>
+        </ul>
+      <p>Tersedia juga fitur tambahan untuk simulasi hitung gaji dan cek overtime:</p>
+        <ul>
+          <li><strong>Cek Gaji Bruto:</strong> Menu ini digunakan untuk melihat pendapatan bruto (Belum termasuk potongan).</li>
+          <li><strong>Cek Overtime:</strong> Menu ini digunakan untuk melihat data lemburan karyawan.</li>
+          <li><strong>Petunjuk Pengguna:</strong> Gunakan sidebar di sebelah kiri untuk berpindah antar menu.</li>
+        </ul>
+      <p>Pastikan Anda selalu menginput data dengan benar agar laporan downtime akurat.</p>
+      <p>Jika ada kendala penggunaan aplikasi, silahkan laporkan ke bagian TPM.</p>
     </section>
   </div>
 
@@ -1018,6 +1172,80 @@
       renderTable(filtered);
     }
 
+    function formatInputRupiah(element) {
+      let value = element.value.replace(/\D/g, '');  // Hapus semua non-digit
+      value = parseInt(value || 0, 10).toLocaleString('id-ID');
+      element.value = value;
+    }
+
+    ['gajiPokok', 'tunjangan', 'insentif'].forEach(id => {
+      const input = document.getElementById(id);
+      input.addEventListener('input', function() {
+        let value = this.value.replace(/\D/g, '');  // Hapus non-digit
+        this.value = parseInt(value || 0, 10).toLocaleString('id-ID');
+      });
+    });
+
+    //Fungsi untuk menambahkan pemisah ribuan dan juta
+    function formatRupiah(angka) {
+      if (isNaN(angka)) return '0';
+        return angka.toLocaleString('id-ID'); // Format angka sesuai dengan format Indonesia
+      }
+
+    function getInputValue(id) {
+      const value = document.getElementById(id).value.replace(/\D/g, '');  // Hapus non-digit
+      return value ? parseFloat(value) : 0;  // Jika kosong, return 0
+    }
+      function hitungGajiBruto() {
+      // Mengambil nilai input
+      let gajiPokok = getInputValue('gajiPokok');
+      let tunjangan = getInputValue('tunjangan');
+      let lembur1jam = parseFloat(document.getElementById('lembur1jam').value) || 0;
+      let lembur2jam = parseFloat(document.getElementById('lembur2jam').value) || 0;
+      let lembur3jam = parseFloat(document.getElementById('lembur3jam').value) || 0;
+      let lembur4jam = parseFloat(document.getElementById('lembur4jam').value) || 0;
+      let insentif = getInputValue('insentif');
+
+      // Validasi input agar tidak kosong atau NaN
+      if (isNaN(gajiPokok) || isNaN(tunjangan) || isNaN(lembur1jam) || isNaN(lembur2jam) || isNaN(lembur3jam) || isNaN(lembur4jam) || isNaN(insentif)) {
+          alert('Mohon masukkan semua data dengan benar!');
+        return;
+      }
+
+      // Menghitung upah per jam lembur
+      let upahPerJam = (gajiPokok + tunjangan) / 173;
+
+      // Menghitung upah lembur 1 jam
+      let upahLembur1Jam = upahPerJam * lembur1jam * 1.5;
+
+      // Menghitung upah lembur 2 jam
+      let upahLembur2Jam = upahPerJam * lembur2jam * 2;
+
+      // Menghitung upah lembur 3 jam
+      let upahLembur3Jam = upahPerJam * lembur3jam * 3;
+
+      // Menghitung upah lembur 4 jam
+      let upahLembur4Jam = upahPerJam * lembur4jam * 4;
+
+      // Menghitung gaji bruto
+      let gajiBruto = gajiPokok + tunjangan + upahLembur1Jam + upahLembur2Jam + upahLembur3Jam + upahLembur4Jam + insentif;
+
+      // Menampilkan hasil dengan format yang lebih rapi
+      document.getElementById('hasil').innerHTML = formatRupiah(gajiBruto);
+    }
+
+    // Fungsi untuk mengosongkan semua input
+    function resetForm() {
+      document.getElementById('gajiPokok').value = '';
+      document.getElementById('tunjangan').value = '';
+      document.getElementById('lembur1jam').value = '';
+      document.getElementById('lembur2jam').value = '';
+      document.getElementById('lembur3jam').value = '';
+      document.getElementById('lembur4jam').value = '';
+      document.getElementById('insentif').value = '';
+      document.getElementById('hasil').innerHTML = ''; // Menghapus hasil perhitungan
+    }
+
     function resetFilterTabel() {
       document.getElementById('filterNama').value = "";
       document.getElementById('filterTanggal').value = "";
@@ -1227,8 +1455,10 @@
       renderTable(allData);
       renderSummaryMekanik();
       renderTopIdMesin(allData);
-      if (allData.length > 0) {
-        applyGrafikFilter();  // Panggil hanya jika ada data
+
+      // ➜ CEK JIKA SECTION GRAFIK SEDANG AKTIF
+      if (document.getElementById('grafik').classList.contains('active')) {
+        applyGrafikFilter();
       }
     });
 
@@ -1236,10 +1466,11 @@
     window.applyGrafikFilter = applyGrafikFilter;
     window.applySummaryFilter = applySummaryFilter;
     window.applyTopIdMesinFilter = applyTopIdMesinFilter;
+    window.hitungGajiBruto = hitungGajiBruto;
     window.resetFilterTabel = resetFilterTabel;
+    window.resetFilterGrafik = resetFilterGrafik;
     window.resetFilterSummary = resetFilterSummary;
     window.resetFilterTopIdMesin = resetFilterTopIdMesin;
-    window.resetFilterGrafik = resetFilterGrafik;
     window.addEventListener('resize', () => {
       renderTable()
       resizeChart();
