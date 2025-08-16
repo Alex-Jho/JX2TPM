@@ -1,0 +1,512 @@
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      display: flex;
+    }
+
+    #toggleSidebar {
+      position: fixed;
+      top: 12px;
+      left: calc(var(--sidebar-width) + 10px);
+      z-index: 1001;
+      background: rgba(0, 0, 0, 0.75);
+      color: white;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 20px;
+      cursor: pointer;
+      transition: left 0.3s ease;
+      box-shadow: none;
+    }
+
+    .sidebar.hidden + #toggleSidebar {
+      left: 15px; /* Ketika sidebar tersembunyi, tombol kembali ke kiri */
+    }
+    
+    #toggleSidebar:hover {
+      background: #16a085;
+    }
+
+    .sidebar {
+      --sidebar-width: 160px;
+      left: 0;
+      transform: translateX(0);
+      width: var(--sidebar-width);
+      background-color: #1a1a2e;
+      backdrop-filter: blur(8px);
+      color: white;
+      height: 100vh;
+      position: fixed;
+      top: 0; left: 0;
+      transition: width 0.3s ease;
+      z-index: 100;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .sidebar ul li.active {
+      background: rgba(255, 255, 255, 0.2);
+      color: #00e0ff;
+    }
+
+    .sidebar ul li.active span.bi {
+      color: #00e0ff;
+    }
+
+    .sidebar.collapsed {
+      --sidebar-width: 50px;
+      transform: translateX(-110px);
+    }
+
+    .sidebar.collapsed ul li {
+      justify-content: center;
+      color: #1a1a2e;
+    }
+
+    .sidebar.collapsed .menu-text {
+      display: none;
+    }
+
+    .sidebar.collapsed h2 {
+      display: none;
+    }
+
+    .sidebar.hidden {
+      transform: translateX(-100%);
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .sidebar ul li {
+      padding: 12px 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .sidebar ul li:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: #ffc107;
+    }
+
+    .sidebar .submenu {
+      padding-left: 30px;
+      font-size: 14px;
+      background: rgba(255,255,255,0.05);
+    }
+
+    .main {
+      margin-left: 30px;
+      padding: 30px;
+      flex-grow: 1;
+      padding-top: 60px;
+      transition: all 0.3s ease;
+    }
+
+    .main.expanded {
+      margin-left: 60px;
+    }
+
+    .section {
+      display: none;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    #summaryContent {
+      display: none;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .card-summary {
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      white-space: normal;
+      overflow: hidden;
+      width: 100%;
+      background: white;
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 10px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 15px;
+    }
+
+    .card-summary h4 {
+      margin: 0 0 8px;
+      color: #2c3e50;
+      font-size: 16px;
+    }
+
+    .card-summary ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .card-summary ul li {
+      margin-bottom: 4px;
+      color: #555;
+    }
+
+    .card {
+      background: linear-gradient(135deg, rgba(27, 4, 233, 0.1), rgba(228, 40, 27, 0.05));
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
+      backdrop-filter: blur(6px);
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+
+    .card h4 {
+      margin: 0 0 8px;
+      color: #1e293b;
+      font-size: 18px;
+    }
+
+    .card p {
+      margin: 4px 0;
+      color: #334155;
+      font-size: 14px;
+    }
+
+    #summaryContainer, #topIdMesinContainer {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    form input, form select, form textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .filter-group label {
+      width: 100%;
+      margin-bottom: 4px;
+    }
+
+
+    .filter-input {
+      padding: 10px 14px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      flex: 1;
+      min-width: 180px;
+    }
+
+    .filter-input:focus {
+      border-color: #007bff;
+      box-shadow: 0 0 0 3px rgba(0,123,255,0.2);
+    }
+
+    form button {
+      background: #28a745;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+    }
+
+    .filter-grid .form-group {
+      flex: 1 1 220px;
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 6px;
+    }
+
+    .result-container {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #f1f1f1;
+      border-radius: 5px;
+    }
+
+    .result {
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .result-label {
+      font-size: 16px;
+    }
+
+    button {
+      background: linear-gradient(135deg, #007bff, #00bfff);
+      color: white;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background: linear-gradient(135deg, #0056b3, #009acd);
+      box-shadow: 0 6px 18px rgba(0, 123, 255, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .btn-cari {
+      background: #28a745;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .btn-cari:hover {
+      background: #0b5ed7;
+      transform: translateY(-1px);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: white;
+    }
+
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .table-responsive table {
+      min-width: 900px;
+      border-collapse: collapse;
+    }
+
+    .table-responsive {
+      padding-bottom: 10px;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+
+    th {
+      background: #2c3e50;
+      color: white;
+    }
+
+    canvas {
+      margin-top: 20px;
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    /*Kode ini untuk Section Petunjuk Pengguna*/
+    #petunjuk {
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+      background: #f9f9f9;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    #petunjuk h2 {
+      font-size: 26px;
+      color: #357ce6;
+      border-bottom: 2px solid #357ce6;
+      padding-bottom: 8px;
+      display: inline-block;
+    }
+
+    #petunjuk p {
+      font-size: 16px;
+      line-height: 1.6;
+      margin-top: 16px;
+    }
+
+    #petunjuk ul {
+      list-style: none;
+      padding-left: 0;
+      margin-top: 16px;
+    }
+
+    #petunjuk ul li {
+      margin-bottom: 8px;
+      position: relative;
+      padding-left: 24px;
+    }
+
+    #petunjuk ul li::before {
+      content: '✔️ ';
+      margin-right: 6px;
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+
+    #lemburan {
+      padding: 20px;
+      max-width: 900px;
+      margin: auto;
+    }
+
+    #lemburanTable {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    #lemburanTable th, #lemburanTable td {
+      padding: 8px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+
+    /* Responsive Sidebar Mobile */
+    @media (max-width: 576px) {
+      .sidebar {
+        transform: translateX(-100%);
+        position: fixed;
+        left: -100%;
+        width: 240px;
+        transition: left 0.3s ease;
+      }
+
+      .sidebar.active {
+        left: 0;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.4);
+        transform: translateX(0);
+      }
+
+      #overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 99;
+      }
+
+      .sidebar.active ~ #overlay {
+        display: block;
+      }
+
+      .table-responsive {
+        display: none;
+      }
+
+      .card-table {
+        display: block !important;
+        width: 100%;
+      }
+
+      #petunjuk {
+        padding: 16px;
+        margin: 0 10px;
+      }
+
+      #petunjuk h2 {
+        font-size: 22px;
+      }
+
+      #petunjuk p, #petunjuk ul li {
+        font-size: 14px;
+      }
+
+      #lemburanTable th, #lemburanTable td {
+        font-size: 14px;
+        padding: 6px;
+      }
+    }
+
+    @media (min-width: 577px) {
+      .sidebar.collapsed {
+        transform: translateX(-110px);
+      }
+    }
+
+    /* Sidebar Collapsed Icon */
+    .sidebar.collapsed ul li span.bi {
+      color: white !important;
+    }
+
+    .sidebar.collapsed ul li:hover span.bi {
+      color: #ffc107;
+    }
+
+    /* Spacing and Font Adaptive */
+    .section h2 {
+      margin-bottom: 20px;
+    }
+
+    body {
+      font-size: clamp(14px, 2vw, 16px);
+    }
+
+    h2 {
+      font-size: clamp(18px, 3vw, 24px);
+    }
