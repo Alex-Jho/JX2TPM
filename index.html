@@ -4,502 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Monitoring Downtime</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="module" src="js/firebase.js"></script>
+  <script type="module" src="js/app.js"></script>
+  <script type="module" src="js/ui.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: #f0f2f5;
-      display: flex;
-    }
-
-    #toggleSidebar {
-      position: fixed;
-      top: 12px;
-      left: calc(var(--sidebar-width) + 10px);
-      z-index: 1001;
-      background: rgba(0, 0, 0, 0.75);
-      color: white;
-      border: none;
-      padding: 10px 14px;
-      border-radius: 6px;
-      font-size: 20px;
-      cursor: pointer;
-      transition: left 0.3s ease;
-      box-shadow: none;
-    }
-
-    .sidebar.hidden + #toggleSidebar {
-      left: 15px; /* Ketika sidebar tersembunyi, tombol kembali ke kiri */
-    }
-    
-    #toggleSidebar:hover {
-      background: #16a085;
-    }
-
-    .sidebar {
-      --sidebar-width: 160px;
-      left: 0;
-      transform: translateX(0);
-      width: var(--sidebar-width);
-      background-color: #1a1a2e;
-      backdrop-filter: blur(8px);
-      color: white;
-      height: 100vh;
-      position: fixed;
-      top: 0; left: 0;
-      transition: width 0.3s ease;
-      z-index: 100;
-      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
-      transition: all 0.3s ease;
-    }
-
-    .sidebar ul li.active {
-      background: rgba(255, 255, 255, 0.2);
-      color: #00e0ff;
-    }
-
-    .sidebar ul li.active span.bi {
-      color: #00e0ff;
-    }
-
-    .sidebar.collapsed {
-      --sidebar-width: 50px;
-      transform: translateX(-110px);
-    }
-
-    .sidebar.collapsed ul li {
-      justify-content: center;
-      color: #1a1a2e;
-    }
-
-    .sidebar.collapsed .menu-text {
-      display: none;
-    }
-
-    .sidebar.collapsed h2 {
-      display: none;
-    }
-
-    .sidebar.hidden {
-      transform: translateX(-100%);
-    }
-
-    .sidebar h2 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .sidebar ul {
-      list-style: none;
-      padding: 0;
-    }
-
-    .sidebar ul li {
-      padding: 12px 20px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .sidebar ul li:hover {
-      background: rgba(255, 255, 255, 0.15);
-      color: #ffc107;
-    }
-
-    .sidebar .submenu {
-      padding-left: 30px;
-      font-size: 14px;
-      background: rgba(255,255,255,0.05);
-    }
-
-    .main {
-      margin-left: 30px;
-      padding: 30px;
-      flex-grow: 1;
-      padding-top: 60px;
-      transition: all 0.3s ease;
-    }
-
-    .main.expanded {
-      margin-left: 60px;
-    }
-
-    .section {
-      display: none;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .section.active {
-      display: block;
-    }
-
-    #summaryContent {
-      display: none;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 16px;
-      margin-top: 20px;
-    }
-
-    .card-summary {
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-      white-space: normal;
-      overflow: hidden;
-      width: 100%;
-      background: white;
-      padding: 16px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      padding: 10px;
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      margin-bottom: 15px;
-    }
-
-    .card-summary h4 {
-      margin: 0 0 8px;
-      color: #2c3e50;
-      font-size: 16px;
-    }
-
-    .card-summary ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      font-size: 14px;
-    }
-
-    .card-summary ul li {
-      margin-bottom: 4px;
-      color: #555;
-    }
-
-    .card {
-      background: linear-gradient(135deg, rgba(27, 4, 233, 0.1), rgba(228, 40, 27, 0.05));
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      transition: transform 0.2s ease, box-shadow 0.3s ease;
-      backdrop-filter: blur(6px);
-    }
-
-    .card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-    }
-
-    .card h4 {
-      margin: 0 0 8px;
-      color: #1e293b;
-      font-size: 18px;
-    }
-
-    .card p {
-      margin: 4px 0;
-      color: #334155;
-      font-size: 14px;
-    }
-
-    #summaryContainer, #topIdMesinContainer {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 16px;
-      margin-top: 20px;
-    }
-
-    form input, form select, form textarea {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-
-    .filter-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 8px;
-      align-items: flex-start;
-      flex-direction: column;
-    }
-
-    .filter-group label {
-      width: 100%;
-      margin-bottom: 4px;
-    }
-
-
-    .filter-input {
-      padding: 10px 14px;
-      font-size: 14px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      outline: none;
-      transition: border-color 0.3s, box-shadow 0.3s;
-      flex: 1;
-      min-width: 180px;
-    }
-
-    .filter-input:focus {
-      border-color: #007bff;
-      box-shadow: 0 0 0 3px rgba(0,123,255,0.2);
-    }
-
-    form button {
-      background: #28a745;
-      color: white;
-      padding: 10px;
-      border: none;
-      border-radius: 5px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    .filter-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 10px;
-    }
-
-    .filter-grid .form-group {
-      flex: 1 1 220px;
-      display: flex;
-      flex-direction: column;
-      margin-bottom: 6px;
-    }
-
-    .result-container {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 20px;
-      padding: 10px;
-      background-color: #f1f1f1;
-      border-radius: 5px;
-    }
-
-    .result {
-      font-size: 18px;
-      font-weight: bold;
-      color: #333;
-    }
-
-    .result-label {
-      font-size: 16px;
-    }
-
-    button {
-      background: linear-gradient(135deg, #007bff, #00bfff);
-      color: white;
-      padding: 10px 18px;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: bold;
-      box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    button:hover {
-      background: linear-gradient(135deg, #0056b3, #009acd);
-      box-shadow: 0 6px 18px rgba(0, 123, 255, 0.4);
-      transform: translateY(-2px);
-    }
-
-    .btn-cari {
-      background: #28a745;
-      color: white;
-      padding: 10px;
-      border: none;
-      border-radius: 5px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    .btn-cari:hover {
-      background: #0b5ed7;
-      transform: translateY(-1px);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-      background: white;
-    }
-
-    .table-responsive {
-      width: 100%;
-      overflow-x: auto;
-    }
-
-    .table-responsive table {
-      min-width: 900px;
-      border-collapse: collapse;
-    }
-
-    .table-responsive {
-      padding-bottom: 10px;
-    }
-
-    th, td {
-      padding: 10px;
-      border: 1px solid #ddd;
-      text-align: center;
-    }
-
-    th {
-      background: #2c3e50;
-      color: white;
-    }
-
-    canvas {
-      margin-top: 20px;
-      background: white;
-      padding: 10px;
-      border-radius: 8px;
-    }
-
-    /*Kode ini untuk Section Petunjuk Pengguna*/
-    #petunjuk {
-      padding: 20px;
-      max-width: 800px;
-      margin: auto;
-      background: #f9f9f9;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-      animation: fadeIn 0.5s ease;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    #petunjuk h2 {
-      font-size: 26px;
-      color: #357ce6;
-      border-bottom: 2px solid #357ce6;
-      padding-bottom: 8px;
-      display: inline-block;
-    }
-
-    #petunjuk p {
-      font-size: 16px;
-      line-height: 1.6;
-      margin-top: 16px;
-    }
-
-    #petunjuk ul {
-      list-style: none;
-      padding-left: 0;
-      margin-top: 16px;
-    }
-
-    #petunjuk ul li {
-      margin-bottom: 8px;
-      position: relative;
-      padding-left: 24px;
-    }
-
-    #petunjuk ul li::before {
-      content: '✔️ ';
-      margin-right: 6px;
-      position: absolute;
-      left: 0;
-      top: 0;
-    }
-
-    /* Responsive Sidebar Mobile */
-    @media (max-width: 576px) {
-      .sidebar {
-        transform: translateX(-100%);
-        position: fixed;
-        left: -100%;
-        width: 240px;
-        transition: left 0.3s ease;
-      }
-
-      .sidebar.active {
-        left: 0;
-        box-shadow: 2px 0 10px rgba(0,0,0,0.4);
-        transform: translateX(0);
-      }
-
-      #overlay {
-        display: none;
-        position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        background: rgba(0,0,0,0.5);
-        z-index: 99;
-      }
-
-      .sidebar.active ~ #overlay {
-        display: block;
-      }
-
-      .table-responsive {
-        display: none;
-      }
-
-      .card-table {
-        display: block !important;
-        width: 100%;
-      }
-
-      #petunjuk {
-        padding: 16px;
-        margin: 0 10px;
-      }
-
-      #petunjuk h2 {
-        font-size: 22px;
-      }
-
-      #petunjuk p, #petunjuk ul li {
-        font-size: 14px;
-      }
-    }
-
-    @media (min-width: 577px) {
-      .sidebar.collapsed {
-        transform: translateX(-110px);
-      }
-    }
-
-    /* Sidebar Collapsed Icon */
-    .sidebar.collapsed ul li span.bi {
-      color: white !important;
-    }
-
-    .sidebar.collapsed ul li:hover span.bi {
-      color: #ffc107;
-    }
-
-    /* Spacing and Font Adaptive */
-    .section h2 {
-      margin-bottom: 20px;
-    }
-
-    body {
-      font-size: clamp(14px, 2vw, 16px);
-    }
-
-    h2 {
-      font-size: clamp(18px, 3vw, 24px);
-    }
-  
-  </style>
-
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 </head>
 <body>
   <button id="toggleSidebar" aria-label="Toggle Sidebar">☰</button>
@@ -549,9 +60,10 @@
   <div id="overlay"></div>
 
   <div class="main">
+    <!-- SECTION INPUT DATA DOWNTIME-->
     <section id="input" class="section">
       <h2>Input Downtime</h2>
-        <form id="inputForm">
+        <form id="downtimeForm">
           <label>NIK:</label>
           <input type="text" name="nik" required pattern="\d+" inputmode="numeric">
           <small id="nikWarning" style="color: #e74c3c; font-style: italic; display: none;">NIK tidak ditemukan di database</small>
@@ -596,7 +108,7 @@
           <button type="submit" id="submitBtn">Kirim <span id="loadingSpinner" style="display:none;">⏳</span></button>
         </form>
     </section>
-
+    <!-- SECTION DATA TABEL -->
     <section id="tabel" class="section">
       <h2>Tabel Data Downtime</h2>
         <div class="filter-grid">
@@ -670,7 +182,7 @@
       </div>
       <div id="cardTableContainer" class="card-table" style="display:none;"></div>
     </section>
-
+    <!-- SECTION DATA GRAFIK -->
     <section id="grafik" class="section">
       <h2>Grafik Data Downtime</h2>
         <div class="filter-grid">
@@ -694,7 +206,7 @@
       <canvas id="chart" height="120"></canvas>
       <div id="summaryContent"></div>
     </section>
-
+    <!-- SECTION SUMMARY -->
     <section id="summary" class="section">
       <h2>Summary Input Downtime per Mekanik</h2>
         <div class="filter-grid">
@@ -721,7 +233,7 @@
       </h3>
       <div id="summaryContainer"></div>
     </section>
-
+    <!-- SECTION TOP ID MESIN -->
     <section id="topmesin" class="section">
       <h2>Summary Top 5 ID Mesin</h2>
         <div class="filter-grid">
@@ -744,17 +256,17 @@
       </h3>
       <div id="topIdMesinContainer"></div>
     </section>
-
+    <!-- SECTION SIMULASI GAJI -->
     <section id="gaji" class="section">
-      <form id="inputForm">
+      <form id="gajiForm">
         <h2>Simulasi Hitung Gaji</h2>
           <div class="form-group">
             <label for="gajiPokok">Gaji Pokok:</label>
-            <input type="number" id="gajiPokok" placeholder="Rp0">
+            <input type="text" id="gajiPokok" placeholder="Rp0">
           </div>
           <div class="form-group">
             <label for="tunjangan">Tunjangan Jabatan:</label>
-            <input type="number" id="tunjangan" placeholder="Rp0">
+            <input type="text" id="tunjangan" placeholder="Rp0">
             </div>
           <div class="form-group">
             <label for="lembur1jam">Jumlah Lembur 1 Jam:</label>
@@ -774,13 +286,13 @@
           </div>
           <div class="form-group">
             <label for="insentif">Insentif:</label>
-            <input type="number" id="insentif" placeholder="Rp0">
+            <input type="text" id="insentif" placeholder="Rp0">
             </div>
         </form>
-          <button onclick="hitungGajiBruto()" class="btn-cari">
+          <button type="button" id="btnHitung" class="btn-cari">
             Hitung
           </button>
-          <button class="btn-cari" onclick="resetForm()">
+          <button type="button" id="btnReset" class="btn-cari">
             Input Data Baru
           </button>
 
@@ -789,11 +301,44 @@
           <div id="hasil" class="result"></div>
         </div>
     </section>
-
+    <!-- SECTION CEK OVERTIME -->
     <section id="lemburan" class="section">
-      <h2>Fitur Cek Overtime (Dalam Pengembangan)</h2>
-      <p>Data informasi lemburan karyawan akan ditampilkan di sini.</p>
+      <h2>Cek Overtime</h2>
+        <!-- FILTER FORM -->
+        <div class="filter-grid">
+          <div class="filter-group">
+            <label for="searchNama">Cari Nama/NIK</label>
+            <input type="text" id="searchNama" placeholder="Masukkan Nama atau NIK" class="filter-input">
+          </div>
+          <div class="filter-group">
+            <label for="fromDate">Dari Tanggal</label>
+            <input type="date" id="fromDate" class="filter-input">
+          </div>
+          <div class="filter-group">
+            <label for="toDate">Ke Tanggal</label>
+            <input type="date" id="toDate" class="filter-input">
+          </div>
+          <button type="button" class="btn-cari" onclick="applyFilterLemburan()">
+            🔍 Cari
+          </button>
+        </div>
+
+        <!-- TABLE OVERTIME -->
+        <div class="table-responsive">
+          <table id="lemburanTable">
+            <thead>
+              <tr>
+                <th>Tanggal</th>
+                <th>Nama Karyawan</th>
+                <th>NIK</th>
+                <th>Keterangan</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
     </section>
+    <!-- SECTION PETUNJUK PENGGUNA -->
     <section id="petunjuk" class="section active">
       <h2>Petunjuk Pengguna</h2>
       <p>Berikut adalah panduan penggunaan aplikasi untuk memantau dan mengelola downtime mesin:</p>
@@ -815,718 +360,5 @@
       <p>Jika ada kendala penggunaan aplikasi, silahkan laporkan ke bagian TPM.</p>
     </section>
   </div>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-    import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDut3AnvIY81bzkZT8vTRVrU5-9zXIJSFo",
-      authDomain: "tpm-utility.firebaseapp.com",
-      databaseURL: "https://tpm-utility-default-rtdb.firebaseio.com",
-      projectId: "tpm-utility",
-      storageBucket: "tpm-utility.appspot.com",
-      messagingSenderId: "467156319343",
-      appId: "1:467156319343:web:baf3048911971bb07ca19a"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    const form = document.getElementById('inputForm');
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const btn = document.getElementById('submitBtn');
-      const spinner = document.getElementById('loadingSpinner');
-      btn.disabled = true;
-      spinner.style.display = 'inline';
-
-      let data = Object.fromEntries(new FormData(form).entries());
-
-      const nikCleaned = data.nik.replace(/^0+/, ""); // hapus nol di depan
-      if (!karyawanMap[nikCleaned]) {
-        alert("NIK tidak ditemukan di database!");
-        btn.disabled = false;
-        spinner.style.display = 'none';
-        return;
-      }
-
-      for (let key in data) {
-        if (key !== "mulai" && key !== "selesai") {
-          data[key] = data[key].toUpperCase();
-        }
-      }
-      
-      data.nik = nikCleaned;
-      data.nik = String(Number(data.nik));
-
-      if (data.mulai >= data.selesai) {
-        alert("Waktu selesai harus lebih besar dari waktu mulai");
-        return;
-      }
-      const today = new Date();
-      const tanggalLocal = today.toLocaleDateString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit' })
-      .split('/')
-      .reverse()
-      .join('-');
-      data.tanggal = tanggalLocal;
-      data.timestamp = Date.now();
-
-      const bulan = today.toLocaleString('id-ID', { month: 'long' });
-      const tahun = today.getFullYear();
-      const nodeBulan = `downtime_${bulan.toLowerCase()}_${tahun}`;
-
-      await push(ref(db, `downtime/${nodeBulan}`), data);
-
-      alert("Data berhasil dikirim");
-      btn.disabled = false;
-      spinner.style.display = 'none';
-      form.reset();
-    });
-
-    let allData = [];
-    let currentFilteredData = null;
-    const tableBody = document.querySelector("#dataTable tbody");
-
-    function isFilterActiveTabel() {
-      return (
-        document.getElementById('filterNama').value.trim() !== "" ||
-        document.getElementById('filterTanggal').value !== "" ||
-        document.getElementById('filterFactory').value !== "" ||
-        document.getElementById('filterArea').value !== ""
-      );
-    }
-
-    function isFilterActiveGrafik() {
-      return (
-        document.getElementById('filterGrafikFrom').value !== "" ||
-        document.getElementById('filterGrafikTo').value !== ""
-      );
-    }
-
-    function isFilterActiveSummary() {
-      return (
-        document.getElementById('filterSummaryNama').value.trim() !== "" ||
-        document.getElementById('filterSummaryFrom').value !== "" ||
-        document.getElementById('filterSummaryTo').value !== ""
-      );
-    }
-
-    function isFilterActiveTopMesin() {
-      return (
-        document.getElementById('filterTopFrom').value !== "" ||
-        document.getElementById('filterTopTo').value !== ""
-      );
-    }
-
-    // Card View Renderer
-    function renderCardView(data) {
-      const container = document.getElementById('cardTableContainer');
-      container.innerHTML = '';
-      data.forEach(row => {
-        const mekanik = karyawanMap[row.nik] || 'Unknown';
-        const card = document.createElement('div');
-        card.className = 'card-summary';
-        card.innerHTML = `
-          <h4>${mekanik}</h4>
-          <p><strong>Tanggal:</strong> ${row.tanggal}</p>
-          <p><strong>Factory:</strong> ${row.Factory}</p>
-          <p><strong>Area:</strong> ${row.area}</p>
-          <p><strong>Mesin:</strong> ${row.idMesin}</p>
-          <p><strong>Masalah:</strong> ${row.masalah}</p>
-          <p><strong>Tindakan:</strong> ${row.tindakan}</p>
-          <p><strong>Sparepart:</strong> ${row.sparepart}</p>
-          <p><strong>Mulai:</strong> ${row.mulai}</p>
-          <p><strong>Selesai:</strong> ${row.selesai}</p>
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    function renderTable(data = allData, forceShowAll = false) {
-      const isMobile = window.innerWidth <= 576;
-      
-      let filtered = data;
-
-      // Jika ada data filter aktif, gunakan itu
-      if (currentFilteredData !== null && !forceShowAll) {
-        filtered = currentFilteredData;
-      }
-
-      // Jika tidak ada filter aktif, pakai default logic tanggal hari ini
-      if (!isFilterActiveTabel() && !forceShowAll && currentFilteredData === null) {
-        const today = new Date();
-        const nowdate = today.toLocaleDateString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('-');
-        filtered = data.filter(row => row.tanggal === nowdate);
-      }
-
-      if (isMobile) {
-        renderCardView(filtered);  // <-- Pastikan CardView pakai data hasil filter
-      } else {
-          tableBody.innerHTML = '';
-          filtered.forEach(row => {
-            const mekanik = karyawanMap[row.nik] || "Unknown";
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-              <td>${row.tanggal}</td>
-              <td>${row.nik}</td>
-              <td>${mekanik}</td>
-              <td>${row.Factory}</td>
-              <td>${row.area}</td>
-              <td>${row.idMesin}</td>
-              <td>${row.masalah}</td>
-              <td>${row.tindakan}</td>
-              <td>${row.sparepart}</td>
-              <td>${row.mulai}</td>
-              <td>${row.selesai}</td>
-            `;
-            tableBody.appendChild(tr);
-          });
-        }  
-        renderChart(filtered);
-    }
-
-    function applyGrafikFilter() {
-      if (allData.length === 0) return;
-
-      const from = document.getElementById("filterGrafikFrom").value;
-      const to = document.getElementById("filterGrafikTo").value;
-
-      let source = allData;
-
-      if (!from && !to) {
-        const today = new Date();
-        const nowdate = today.toLocaleDateString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('-');
-        source = allData.filter(row => row.tanggal === nowdate);
-
-        if (source.length === 0) {
-          alert("Tidak ditemukan data grafik");
-          if (chart) chart.destroy(); // Hapus chart jika ada
-          return;
-        }
-
-      } else {
-          source = allData.filter(row => {
-            return (!from || row.tanggal >= from) && (!to || row.tanggal <= to);
-          });
-
-          if (source.length === 0) {
-            alert("Tidak ditemukan data grafik");
-            if (chart) chart.destroy(); // Hapus chart jika ada
-            return;
-          }
-        }
-
-      const areaMap = {};
-      source.forEach(row => {
-        areaMap[row.area] = (areaMap[row.area] || 0) + 1;
-      });
-
-      renderChart(areaMap);
-    }
-
-    function renderSummaryMekanik(filteredData = null) {
-      const summaryContainer = document.getElementById("summaryContainer");
-      summaryContainer.innerHTML = "";
-
-      const today = new Date();
-      const nowdate = today.toLocaleDateString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('-');
-
-      const source = filteredData || allData.filter(row => row.tanggal === nowdate);
-
-      const grouped = {};
-
-      source.forEach(item => {
-        const nama = karyawanMap[item.nik] || "Unknown";
-        const key = `${nama}_${item.tanggal}`;
-        grouped[key] = (grouped[key] || 0) + 1;
-      });
-
-      const sortedEntries = Object.entries(grouped)
-        .sort((a, b) => {
-          if (b[1] !== a[1]) return b[1] - a[1];
-          const [namaA] = a[0].split("_");
-          const [namaB] = b[0].split("_");
-          return namaA.localeCompare(namaB);
-        });
-
-      sortedEntries.forEach(([key, count]) => {
-        const [nama, tanggal] = key.split("_");
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `
-          <h4>${nama}</h4>
-          <p><strong>Tanggal:</strong> ${tanggal}</p>
-          <p><strong>Jumlah Input:</strong> ${count}</p>
-        `;
-        summaryContainer.appendChild(card);
-      });
-    }
-
-    function renderTopIdMesin(filteredData = null) {
-      const container = document.getElementById("topIdMesinContainer");
-      container.innerHTML = "";
-
-      const today = new Date();
-      const nowdate = today.toLocaleDateString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('-');
-
-      const source = filteredData || allData.filter(row => row.tanggal === nowdate);
-
-      const grouped = {};
-
-      source.forEach(item => {
-        const tanggal = item.tanggal;
-        if (!grouped[tanggal]) grouped[tanggal] = {};
-        grouped[tanggal][item.idMesin] = (grouped[tanggal][item.idMesin] || 0) + 1;
-      });
-
-      Object.entries(grouped).forEach(([tanggal, mesinMap]) => {
-        const sorted = Object.entries(mesinMap)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 5);
-
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `<h4>Top 5 ID Mesin - ${tanggal}</h4>` +
-          sorted.map(([id, count]) => `<p><strong>${id}</strong>: ${count}x</p>`).join("");
-          container.appendChild(card);
-      });
-    }
-
-    let chart;
-    function renderChart(areaMap) {
-      const ctx = document.getElementById("chart").getContext("2d");
-      if (chart) chart.destroy();
-      chart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: Object.keys(areaMap),
-          datasets: [{
-            label: 'Jumlah Downtime per Area',
-            data: Object.values(areaMap),
-            backgroundColor: '#dc3545'
-          }]
-        }
-      });
-    }
-
-    function resizeChart() {
-      if (chart) {
-        chart.destroy();
-      }
-      applyGrafikFilter(); // Ini akan memanggil renderChart() ulang dengan data yang sama
-    }
-
-    function renderSummary(filtered) {
-      const summaryDiv = document.getElementById("summaryContent");
-      summaryDiv.innerHTML = "";
-
-      const mekanikSummary = {};
-
-      filtered.forEach(row => {
-        const nama = karyawanMap[row.nik] || "Unknown";
-        if (!mekanikSummary[nama]) mekanikSummary[nama] = {};
-        const tgl = row.tanggal;
-        mekanikSummary[nama][tgl] = (mekanikSummary[nama][tgl] || 0) + 1;
-      });
-
-      Object.entries(mekanikSummary).forEach(([nama, tanggalMap]) => {
-        const card = document.createElement("div");
-        card.className = "card-summary";
-        card.innerHTML = `<h4>${nama}</h4>`;
-        const ul = document.createElement("ul");
-
-        Object.entries(tanggalMap).forEach(([tgl, count]) => {
-          const li = document.createElement("li");
-          li.textContent = `📅 ${tgl}: ${count} input`;
-          ul.appendChild(li);
-        });
-
-        card.appendChild(ul);
-        summaryDiv.appendChild(card);
-      });
-    }
-
-    function applyFilter() {
-      const nama = document.getElementById('filterNama').value.toLowerCase();
-      const tanggal = document.getElementById('filterTanggal').value;
-      const Factory = document.getElementById('filterFactory').value.toUpperCase();
-      const area = document.getElementById('filterArea').value;
-
-      const filtered = allData.filter(d => {
-        const mekanik = (karyawanMap[d.nik] || "").toLowerCase();
-        return (!nama || mekanik.includes(nama)) &&
-            (!tanggal || d.tanggal === tanggal) &&
-            (!Factory || d.Factory === Factory) &&
-            (!area || d.area === area);
-      });
-
-      currentFilteredData = filtered;
-
-      // ➜ CEK JIKA TIDAK ADA DATA
-      if (filtered.length === 0) {
-        alert("Tidak ditemukan data");
-      }
-
-      renderTable(filtered);
-    }
-
-    function formatInputRupiah(element) {
-      let value = element.value.replace(/\D/g, '');  // Hapus semua non-digit
-      value = parseInt(value || 0, 10).toLocaleString('id-ID');
-      element.value = value;
-    }
-
-    ['gajiPokok', 'tunjangan', 'insentif'].forEach(id => {
-      const input = document.getElementById(id);
-      input.addEventListener('input', function() {
-        let value = this.value.replace(/\D/g, '');  // Hapus non-digit
-        this.value = parseInt(value || 0, 10).toLocaleString('id-ID');
-      });
-    });
-
-    //Fungsi untuk menambahkan pemisah ribuan dan juta
-    function formatRupiah(angka) {
-      if (isNaN(angka)) return '0';
-        return angka.toLocaleString('id-ID'); // Format angka sesuai dengan format Indonesia
-      }
-
-    function getInputValue(id) {
-      const value = document.getElementById(id).value.replace(/\D/g, '');  // Hapus non-digit
-      return value ? parseFloat(value) : 0;  // Jika kosong, return 0
-    }
-      function hitungGajiBruto() {
-      // Mengambil nilai input
-      let gajiPokok = getInputValue('gajiPokok');
-      let tunjangan = getInputValue('tunjangan');
-      let lembur1jam = parseFloat(document.getElementById('lembur1jam').value) || 0;
-      let lembur2jam = parseFloat(document.getElementById('lembur2jam').value) || 0;
-      let lembur3jam = parseFloat(document.getElementById('lembur3jam').value) || 0;
-      let lembur4jam = parseFloat(document.getElementById('lembur4jam').value) || 0;
-      let insentif = getInputValue('insentif');
-
-      // Validasi input agar tidak kosong atau NaN
-      if (isNaN(gajiPokok) || isNaN(tunjangan) || isNaN(lembur1jam) || isNaN(lembur2jam) || isNaN(lembur3jam) || isNaN(lembur4jam) || isNaN(insentif)) {
-          alert('Mohon masukkan semua data dengan benar!');
-        return;
-      }
-
-      // Menghitung upah per jam lembur
-      let upahPerJam = (gajiPokok + tunjangan) / 173;
-
-      // Menghitung upah lembur 1 jam
-      let upahLembur1Jam = upahPerJam * lembur1jam * 1.5;
-
-      // Menghitung upah lembur 2 jam
-      let upahLembur2Jam = upahPerJam * lembur2jam * 2;
-
-      // Menghitung upah lembur 3 jam
-      let upahLembur3Jam = upahPerJam * lembur3jam * 3;
-
-      // Menghitung upah lembur 4 jam
-      let upahLembur4Jam = upahPerJam * lembur4jam * 4;
-
-      // Menghitung gaji bruto
-      let gajiBruto = gajiPokok + tunjangan + upahLembur1Jam + upahLembur2Jam + upahLembur3Jam + upahLembur4Jam + insentif;
-
-      // Menampilkan hasil dengan format yang lebih rapi
-      document.getElementById('hasil').innerHTML = formatRupiah(gajiBruto);
-    }
-
-    // Fungsi untuk mengosongkan semua input
-    function resetForm() {
-      document.getElementById('gajiPokok').value = '';
-      document.getElementById('tunjangan').value = '';
-      document.getElementById('lembur1jam').value = '';
-      document.getElementById('lembur2jam').value = '';
-      document.getElementById('lembur3jam').value = '';
-      document.getElementById('lembur4jam').value = '';
-      document.getElementById('insentif').value = '';
-      document.getElementById('hasil').innerHTML = ''; // Menghapus hasil perhitungan
-    }
-
-    function resetFilterTabel() {
-      document.getElementById('filterNama').value = "";
-      document.getElementById('filterTanggal').value = "";
-      document.getElementById('filterFactory').value = "";
-      document.getElementById('filterArea').value = "";
-
-      currentFilteredData = null;  // <-- Reset state filter
-
-      renderTable(allData, true);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function resetFilterSummary() {
-      document.getElementById('filterSummaryNama').value = "";
-      document.getElementById('filterSummaryFrom').value = "";
-      document.getElementById('filterSummaryTo').value = "";
-      applySummaryFilter();
-      renderSummaryMekanik();
-    }
-
-    function resetFilterTopIdMesin() {
-      document.getElementById('filterTopFrom').value = "";
-      document.getElementById('filterTopTo').value = "";
-      applyTopIdMesinFilter();
-      renderTopIdMesin();
-    }
-
-    function resetFilterGrafik() {
-      document.getElementById('filterGrafikFrom').value = "";
-      document.getElementById('filterGrafikTo').value = "";
-      applyGrafikFilter();
-    }
-
-    function applySummaryFilter() {
-      const nama = document.getElementById('filterSummaryNama').value.toLowerCase();
-      const from = document.getElementById('filterSummaryFrom').value;
-      const to = document.getElementById('filterSummaryTo').value;
-
-      const today = new Date();
-      const nowdate = today.toLocaleDateString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('-');
-
-      let filtered = allData;
-
-      if (!isFilterActiveSummary()) {
-        const today = new Date();
-        const nowdate = today.toLocaleDateString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('-');
-        filtered = allData.filter(row => row.tanggal === nowdate);
-
-        if (filtered.length === 0) {
-          alert("Tidak ditemukan data summary");
-          document.getElementById("summaryContainer").innerHTML = "<p>Tidak ditemukan data summary.</p>";
-          return;
-        }
-      } else {
-          filtered = allData.filter(row => {
-            const mekanik = (karyawanMap[row.nik] || "").toLowerCase();
-            return (!nama || mekanik.includes(nama)) &&
-                  (!from || row.tanggal >= from) &&
-                  (!to || row.tanggal <= to);
-          });
-          if (filtered.length === 0) {
-            alert("Tidak ditemukan data summary");
-            document.getElementById("summaryContainer").innerHTML = "<p>Tidak ditemukan data summary.</p>";
-            return;
-          }
-        }
-
-      const summaryContainer = document.getElementById("summaryContainer");
-      summaryContainer.innerHTML = "";
-
-      const grouped = {};
-      filtered.forEach(item => {
-        const nama = karyawanMap[item.nik] || "Unknown";
-        const key = `${nama}_${item.tanggal}`;
-        grouped[key] = (grouped[key] || 0) + 1;
-      });
-
-      const sortedEntries = Object.entries(grouped)
-      .sort((a, b) => {
-        const [namaA] = a[0].split("_");
-        const [namaB] = b[0].split("_");
-        if (b[1] !== a[1]) return b[1] - a[1]; // Urut jumlah input menurun
-        return namaA.localeCompare(namaB);    // Urut abjad jika sama
-      });
-
-      sortedEntries.forEach(([key, count]) => {
-        const [nama, tanggal] = key.split("_");
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `
-          <h4>${nama}</h4>
-          <p><strong>Tanggal:</strong> ${tanggal}</p>
-          <p><strong>Jumlah Input:</strong> ${count}</p>
-        `;
-        summaryContainer.appendChild(card);
-      });
-    }
-
-    function applyTopIdMesinFilter() {
-      const from = document.getElementById("filterTopFrom").value;
-      const to = document.getElementById("filterTopTo").value;
-
-      const today = new Date();
-      const nowdate = today.toLocaleDateString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('-');
-
-      let filtered = allData;
-
-      if (!isFilterActiveTopMesin()) {
-        filtered = allData.filter(row => row.tanggal === nowdate);
-        if (filtered.length === 0) {
-          alert("Tidak ditemukan data top ID mesin");
-          document.getElementById("topIdMesinContainer").innerHTML = "<p>Tidak ditemukan data top ID mesin.</p>";
-          return;
-        }
-      } else {
-          filtered = allData.filter(row => {
-            return (!from || row.tanggal >= from) && (!to || row.tanggal <= to);
-          });
-          if (filtered.length === 0) {
-            alert("Tidak ditemukan data top ID mesin");
-            document.getElementById("topIdMesinContainer").innerHTML = "<p>Tidak ditemukan data top ID mesin.</p>";
-            return;
-          }
-        }
-
-      const container = document.getElementById("topIdMesinContainer");
-      container.innerHTML = "";
-      const grouped = {};
-
-      filtered.forEach(item => {
-        const tanggal = item.tanggal;
-        if (!grouped[tanggal]) grouped[tanggal] = {};
-        grouped[tanggal][item.idMesin] = (grouped[tanggal][item.idMesin] || 0) + 1;
-      });
-
-      Object.entries(grouped).forEach(([tanggal, mesinMap]) => {
-        const sorted = Object.entries(mesinMap)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 5);
-
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `<h4>Top 5 ID Mesin - ${tanggal}</h4>` +
-          sorted.map(([id, count]) => `<p><strong>${id}</strong>: ${count}x</p>`).join("");
-        container.appendChild(card);
-      });
-    }
-
-    let karyawanMap = {};
-
-    onValue(ref(db, "karyawan"), snapshot => {
-      karyawanMap = snapshot.val() || {};
-    });
-
-    let idMesinList = [];
-
-    onValue(ref(db, "idMesinList"), snapshot => {
-      idMesinList = [];
-      snapshot.forEach(child => {
-        idMesinList.push(child.val());
-      });
-      populateIdMesinOptions(); 
-    });
-
-    function populateIdMesinOptions() {
-      const datalist = document.getElementById('idMesinOptions');
-      datalist.innerHTML = '';  // Clear existing options
-
-      idMesinList.forEach(id => {
-        const option = document.createElement('option');
-        option.value = id;
-        datalist.appendChild(option);
-      });
-    }
-
-    const nikInput = document.querySelector('input[name="nik"]');
-    const nikWarning = document.getElementById("nikWarning");
-
-    nikInput.addEventListener("input", () => {
-      const nik = nikInput.value.trim();
-      if (nik === "") {
-        nikWarning.style.display = "none";
-      return;
-      }
-
-      const nikCleaned = nik.replace(/^0+/, ""); // hapus nol di depan
-      if (karyawanMap[nikCleaned]) {
-        nikWarning.style.display = "none";
-      } else {
-        nikWarning.style.display = "block";
-      }
-    });
-
-    onValue(ref(db, "downtime"), snapshot => {
-      allData.length = 0;
-
-      snapshot.forEach(monthNode => {
-        monthNode.forEach(child => {
-          const val = child.val();
-          allData.push({
-            ...val,
-            id: child.key
-          });
-        });
-      });
-
-      renderTable(allData);
-      renderSummaryMekanik();
-      renderTopIdMesin(allData);
-
-      // ➜ CEK JIKA SECTION GRAFIK SEDANG AKTIF
-      if (document.getElementById('grafik').classList.contains('active')) {
-        applyGrafikFilter();
-      }
-    });
-
-    window.applyFilter = applyFilter;
-    window.applyGrafikFilter = applyGrafikFilter;
-    window.applySummaryFilter = applySummaryFilter;
-    window.applyTopIdMesinFilter = applyTopIdMesinFilter;
-    window.hitungGajiBruto = hitungGajiBruto;
-    window.resetFilterTabel = resetFilterTabel;
-    window.resetFilterGrafik = resetFilterGrafik;
-    window.resetFilterSummary = resetFilterSummary;
-    window.resetFilterTopIdMesin = resetFilterTopIdMesin;
-    window.addEventListener('resize', () => {
-      renderTable()
-      resizeChart();
-    });
-  </script>
-
-  <script>
-    function showSection(id) {
-      document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
-    }
-
-    function toggleSubmenu() {
-      const sub = document.getElementById("submenu");
-      sub.style.display = sub.style.display === "none" ? "block" : "none";
-    }
-
-    document.querySelectorAll('.sidebar ul li').forEach(li => {
-      li.addEventListener('click', function () {
-        document.querySelectorAll('.sidebar ul li').forEach(item => item.classList.remove('active'));
-        this.classList.add('active');
-      });
-    });
-
-    document.getElementById('exportExcelBtn').addEventListener('click', () => {
-      // Ambil data tabel (yang sedang tampil)
-      const table = document.getElementById('dataTable');
-      const wb = XLSX.utils.table_to_book(table, {sheet:"Data Downtime"});
-
-      // Save file Excel
-      XLSX.writeFile(wb, 'data-downtime.xlsx');
-    });
-
-
-    const btn = document.getElementById("toggleSidebar");
-    const sidebar = document.querySelector(".sidebar");
-    const main = document.querySelector(".main");
-
-    const overlay = document.getElementById('overlay');
-      
-    btn.addEventListener("click", () => {
-      if (window.innerWidth <= 576) {
-        sidebar.classList.toggle("active");
-      } else {
-          sidebar.classList.toggle("collapsed");
-          main.classList.toggle("expanded");
-          /*document.querySelector(".main").classList.toggle("expanded");*/
-        }
-    });
-
-    overlay.addEventListener("click", () => {
-      sidebar.classList.remove("active");
-    });
-
-  </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </body>
 </html>
-
