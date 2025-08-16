@@ -8,9 +8,10 @@ const firebaseConfig = {
     authDomain: "tpm-utility.firebaseapp.com",
     databaseURL: "https://tpm-utility-default-rtdb.firebaseio.com",
     projectId: "tpm-utility",
-    storageBucket: "tpm-utility.appspot.com",
+    storageBucket: "tpm-utility.firebasestorage.app",
     messagingSenderId: "467156319343",
-    appId: "1:467156319343:web:baf3048911971bb07ca19a"
+    appId: "1:467156319343:web:baf3048911971bb07ca19a",
+    measurementId: "G-62BM6RHBGX"
 };
 
 // Inisialisasi Firebase
@@ -19,3 +20,4 @@ export const db = getDatabase(app);
 
 // Export helper Firebase
 export { ref, push, onValue };
+
