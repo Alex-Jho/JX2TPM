@@ -1,3 +1,4 @@
+import { db, ref, push, onValue } from "./firebase.js";
 let allData = [];
 let currentFilteredData = null;
 let lemburanData = [];
@@ -744,4 +745,5 @@ function renderSummaryMekanik(filteredData = null) {
             btnReset.addEventListener("click", resetForm);
         }
     });
+
 
