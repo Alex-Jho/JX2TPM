@@ -12,6 +12,36 @@ const nikInput = document.querySelector('input[name="nik"]');
 const nikWarning = document.getElementById("nikWarning");
 const form = document.getElementById('downtimeForm');
 
+function toast(icon, title) {
+  Swal.fire({
+    icon,
+    title,
+    toast: true,
+    position: 'top-end',
+    timer: 2000,
+    showConfirmButton: false,
+    timerProgressBar: true
+  });
+}
+
+function modalError(text) {
+  Swal.fire({ 
+    icon: 'error', 
+    title: 'Oops…', 
+    text 
+  });
+}
+
+function modalSuccess(text) {
+  Swal.fire({ 
+    icon: 'success', 
+    title: 'Berhasil!', 
+    text, 
+    timer: 1800, 
+    showConfirmButton: false 
+  });
+}
+
 //HANDLER SUBMIT DATA DOWNTIME
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -25,7 +55,7 @@ form.addEventListener('submit', async (e) => {
 
     const nikCleaned = data.nik.replace(/^0+/, ""); // hapus nol di depan
     if (!karyawanMap[nikCleaned]) {
-        alert("NIK tidak ditemukan di database!");
+        modalError("NIK tidak ditemukan di database!");
         btn.disabled = false;
         spinner.style.display = 'none';
         return;
@@ -58,14 +88,14 @@ form.addEventListener('submit', async (e) => {
 
     // Validasi durasi (misalnya max 12 jam biar tidak salah input)
     if (durasiMenit <= 0 || durasiMenit > 12 * 60) {
-        alert("Input waktu tidak valid. Periksa kembali jam mulai dan selesai.");
+        modalError("Input waktu tidak valid. Periksa kembali jam mulai dan selesai.");
         btn.disabled = false;
         spinner.style.display = 'none';
         return;
     }
 
     data.durasiMenit = durasiMenit;
-    
+
     const today = new Date();
     const tanggalLocal = today.toLocaleDateString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit' })
     .split('/')
@@ -80,7 +110,7 @@ form.addEventListener('submit', async (e) => {
 
     await push(ref(db, `downtime/${nodeBulan}`), data);
 
-    alert("Data berhasil dikirim");
+    modalSuccess("Data berhasil dikirim");
     btn.disabled = false;
     spinner.style.display = 'none';
     form.reset();
@@ -240,7 +270,7 @@ function applyFilter() {
 
     // ➜ CEK JIKA TIDAK ADA DATA
     if (filtered.length === 0) {
-        alert("Tidak ditemukan data");
+        toast('info', 'Tidak ditemukan data');
     }
 
     renderTable(filtered);
@@ -273,7 +303,7 @@ function applyGrafikFilter() {
         source = allData.filter(row => row.tanggal === nowdate);
 
         if (source.length === 0) {
-          alert("Tidak ditemukan data grafik");
+          toast('info', 'Tidak ditemukan data grafik');
           if (chart) chart.destroy(); // Hapus chart jika ada
           return;
         }
@@ -285,7 +315,7 @@ function applyGrafikFilter() {
           });
 
           if (source.length === 0) {
-            alert("Tidak ditemukan data grafik");
+            toast('info', 'Tidak ditemukan data grafik');
             if (chart) chart.destroy(); // Hapus chart jika ada
             return;
           }
@@ -322,7 +352,7 @@ function applySummaryFilter() {
         filtered = allData.filter(row => row.tanggal === nowdate);
 
         if (filtered.length === 0) {
-          alert("Tidak ditemukan data summary");
+          toast('info', 'Tidak ditemukan data summary');
           document.getElementById("summaryContainer").innerHTML = "<p>Tidak ditemukan data summary.</p>";
           return;
         }
@@ -336,7 +366,7 @@ function applySummaryFilter() {
         });
 
         if (filtered.length === 0) {
-            alert("Tidak ditemukan data summary");
+            toast('info', 'Tidak ditemukan data summary');
             document.getElementById("summaryContainer").innerHTML = "<p>Tidak ditemukan data summary.</p>";
             return;
         }
@@ -395,7 +425,7 @@ function applyTopIdMesinFilter() {
     if (!isFilterActiveTopMesin()) {
         filtered = allData.filter(row => row.tanggal === nowdate);
         if (filtered.length === 0) {
-          alert("Tidak ditemukan data top ID mesin");
+          toast('info', 'Tidak ditemukan data top ID mesin');
           document.getElementById("topIdMesinContainer").innerHTML = "<p>Tidak ditemukan data top ID mesin.</p>";
           return;
         }
@@ -405,7 +435,7 @@ function applyTopIdMesinFilter() {
             return (!from || row.tanggal >= from) && (!to || row.tanggal <= to);
         });
         if (filtered.length === 0) {
-            alert("Tidak ditemukan data top ID mesin");
+            toast('info', 'Tidak ditemukan data top ID mesin');
             document.getElementById("topIdMesinContainer").innerHTML = "<p>Tidak ditemukan data top ID mesin.</p>";
             return;
         }
@@ -694,7 +724,7 @@ function renderSummaryMekanik(filteredData = null) {
 
       // Validasi input agar tidak kosong atau NaN
       if (isNaN(gajiPokok) || isNaN(tunjangan) || isNaN(lembur1jam) || isNaN(lembur2jam) || isNaN(lembur3jam) || isNaN(lembur4jam) || isNaN(insentif)) {
-          alert('Mohon masukkan semua data dengan benar!');
+          modalError('Mohon masukkan semua data dengan benar!');
         return;
       }
 
