@@ -1,4 +1,4 @@
-import { db, ref, push, onValue, query, orderByChild, get } from "./firebase.js";
+import { db, ref, push, onValue, query, orderByChild } from "./firebase.js";
 
 let allData = [];
 let currentFilteredData = null;
