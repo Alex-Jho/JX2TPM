@@ -1,4 +1,4 @@
-import { db, ref, push, onValue } from "./firebase.js";
+import { db, ref, push, onValue, query, orderByChild, get } from "./firebase.js";
 
 let allData = [];
 let currentFilteredData = null;
@@ -48,23 +48,26 @@ form.addEventListener('submit', async (e) => {
 
     const btn = document.getElementById('submitBtn');
     const spinner = document.getElementById('loadingSpinner');
+
     btn.disabled = true;
+    btn.setAttribute('aria-busy', 'true');
     spinner.style.display = 'inline';
 
     let data = Object.fromEntries(new FormData(form).entries());
 
     const nikCleaned = data.nik.replace(/^0+/, ""); // hapus nol di depan
     if (!karyawanMap[nikCleaned]) {
-        modalError("NIK tidak ditemukan di database!");
-        btn.disabled = false;
-        spinner.style.display = 'none';
-        return;
+      modalError("NIK tidak ditemukan di database!");
+      btn.disabled = false;
+      btn.removeAttribute('aria-busy');
+      spinner.style.display = 'none';
+      return;
     }
 
     for (let key in data) {
-        if (key !== "mulai" && key !== "selesai") {
-          data[key] = data[key].toUpperCase();
-        }
+      if (key !== "mulai" && key !== "selesai") {
+        data[key] = data[key].toUpperCase();
+      }
     }
       
     data.nik = nikCleaned;
@@ -88,10 +91,11 @@ form.addEventListener('submit', async (e) => {
 
     // Validasi durasi (misalnya max 12 jam biar tidak salah input)
     if (durasiMenit <= 0 || durasiMenit > 12 * 60) {
-        modalError("Input waktu tidak valid. Periksa kembali jam mulai dan selesai.");
-        btn.disabled = false;
-        spinner.style.display = 'none';
-        return;
+      modalError("Input waktu tidak valid. Periksa kembali jam mulai dan selesai.");
+      btn.disabled = false;
+      btn.removeAttribute('aria-busy');
+      spinner.style.display = 'none';
+      return;
     }
 
     data.durasiMenit = durasiMenit;
@@ -112,7 +116,9 @@ form.addEventListener('submit', async (e) => {
 
     modalSuccess("Data berhasil dikirim");
     btn.disabled = false;
+    btn.removeAttribute('aria-busy');
     spinner.style.display = 'none';
+
     form.reset();
 });
 
@@ -163,28 +169,43 @@ onValue(ref(db, "idMesinList"), snapshot => {
 
 });
 
-onValue(ref(db, "downtime"), snapshot => {
-    allData.length = 0;
+function listenDowntime(bulanNode) {
+  allData.length = 0;
 
-    snapshot.forEach(monthNode => {
-        monthNode.forEach(child => {
-          const val = child.val();
-          allData.push({
-            ...val,
-            id: child.key
-          });
+  const q = query(ref(db, `downtime/${bulanNode}`), orderByChild("tanggal"));
+  onValue(q, snapshot => {
+    allData.length = 0; // reset biar gak dobel
+    if (snapshot.exists()) {
+      snapshot.forEach(child => {
+        const val = child.val();
+        allData.push({
+          ...val,
+          id: child.key
         });
-    });
+      });
+    }
+
+    console.log("Ambil data dari node:", bulanNode);
+    console.log("Jumlah data:", allData.length);
+    console.log("Isi data:", allData);
 
     renderTable(allData);
     renderSummaryMekanik();
     renderTopIdMesin(allData);
 
-    // ➜ CEK JIKA SECTION GRAFIK SEDANG AKTIF
     if (document.getElementById('grafik').classList.contains('active')) {
-        applyGrafikFilter();
+      applyGrafikFilter();
     }
-});
+  });
+}
+
+const today = new Date();
+const bulan = today.toLocaleString('id-ID', { month: 'long' });
+const tahun = today.getFullYear();
+const bulanNode = `downtime_${bulan.toLowerCase()}_${tahun}`;
+
+// panggil load untuk pertama kali
+listenDowntime(bulanNode);
 
 onValue(ref(db, "lemburan"), snapshot => {
     lemburanData.length = 0;
@@ -262,8 +283,8 @@ function applyFilter() {
         const mekanik = (karyawanMap[d.nik] || "").toLowerCase();
         return (!nama || mekanik.includes(nama)) &&
             (!tanggal || d.tanggal === tanggal) &&
-            (!Factory || d.Factory === Factory) &&
-            (!area || d.area === area);
+            (!Factory || (d.Factory || "").toUpperCase() === Factory) &&
+            (!area || (d.area || "").toUpperCase() === area);
     });
 
     currentFilteredData = filtered;
