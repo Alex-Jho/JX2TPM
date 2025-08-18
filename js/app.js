@@ -40,6 +40,8 @@ form.addEventListener('submit', async (e) => {
 
     if (data.mulai >= data.selesai) {
         alert("Waktu selesai harus lebih besar dari waktu mulai");
+        btn.disabled = false;               // aktifkan tombol lagi
+        spinner.style.display = 'none';     // sembunyikan spinner
         return;
     }
 
@@ -745,5 +747,6 @@ function renderSummaryMekanik(filteredData = null) {
             btnReset.addEventListener("click", resetForm);
         }
     });
+
 
 
