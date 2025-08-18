@@ -14,8 +14,8 @@ const firebaseConfig = {
 };
 
 // Inisialisasi Firebase
-const db = getDatabase(app);
 export const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
 // Export helper Firebase
 export { db, ref, push, onValue, query, orderByChild };
