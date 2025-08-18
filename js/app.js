@@ -1,4 +1,5 @@
 import { db, ref, push, onValue } from "./firebase.js";
+
 let allData = [];
 let currentFilteredData = null;
 let lemburanData = [];
@@ -11,6 +12,7 @@ const nikInput = document.querySelector('input[name="nik"]');
 const nikWarning = document.getElementById("nikWarning");
 const form = document.getElementById('downtimeForm');
 
+//HANDLER SUBMIT DATA DOWNTIME
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -38,13 +40,32 @@ form.addEventListener('submit', async (e) => {
     data.nik = nikCleaned;
     data.nik = String(Number(data.nik));
 
-    if (data.mulai >= data.selesai) {
-        alert("Waktu selesai harus lebih besar dari waktu mulai");
-        btn.disabled = false;               // aktifkan tombol lagi
-        spinner.style.display = 'none';     // sembunyikan spinner
+    // ===== VALIDASI WAKTU MULAI & SELESAI =====
+    const [hMulai, mMulai] = data.mulai.split(":").map(Number);
+    const [hSelesai, mSelesai] = data.selesai.split(":").map(Number);
+
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hMulai, mMulai);
+    let end   = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hSelesai, mSelesai);
+
+    // Jika jam selesai <= jam mulai → anggap lintas hari
+    if (end <= start) {
+        end.setDate(end.getDate() + 1);
+    }
+
+    // Hitung durasi menit
+    const durasiMenit = (end - start) / 60000;
+
+    // Validasi durasi (misalnya max 12 jam biar tidak salah input)
+    if (durasiMenit <= 0 || durasiMenit > 12 * 60) {
+        alert("Input waktu tidak valid. Periksa kembali jam mulai dan selesai.");
+        btn.disabled = false;
+        spinner.style.display = 'none';
         return;
     }
 
+    data.durasiMenit = durasiMenit;
+    
     const today = new Date();
     const tanggalLocal = today.toLocaleDateString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit' })
     .split('/')
@@ -747,6 +768,3 @@ function renderSummaryMekanik(filteredData = null) {
             btnReset.addEventListener("click", resetForm);
         }
     });
-
-
-
