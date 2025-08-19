@@ -1,5 +1,7 @@
 import { db, ref, push, onValue, query, orderByChild, get } from "./firebase.js";
 
+
+
 let allData = [];
 let currentFilteredData = null;
 let lemburanData = [];
@@ -162,6 +164,20 @@ onValue(ref(db, "karyawan"), snapshot => {
     console.log("🔑 Keys:", Object.keys(karyawanMap));
 });
 
+import { db, ref, get } from "./firebase.js";
+
+get(ref(db, "karyawan"))
+  .then(snap => {
+    if (snap.exists()) {
+      console.log("✅ Isi node karyawan (get):", snap.val());
+    } else {
+      console.warn("⚠️ Node 'karyawan' kosong di Firebase!");
+    }
+  })
+  .catch(err => {
+    console.error("❌ Error ambil node karyawan:", err);
+  });
+
 onValue(ref(db, "idMesinList"), snapshot => {
     idMesinList = [];
     snapshot.forEach(child => {
@@ -248,7 +264,7 @@ nikInput.addEventListener("input", () => {
 
     console.log("Input NIK:", nik, "Cleaned:", nikCleaned);
     console.log("karyawanMap:", karyawanMap);
-    
+
     if (karyawanMap[nikCleaned]) {
         nikWarning.style.display = "none";
     }
@@ -831,4 +847,3 @@ function renderSummaryMekanik(filteredData = null) {
             btnReset.addEventListener("click", resetForm);
         }
     });
-
