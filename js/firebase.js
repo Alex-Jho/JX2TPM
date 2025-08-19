@@ -1,6 +1,6 @@
 // firebase.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-import { getDatabase, ref, push, onValue, query, orderByChild, get } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+import { getDatabase, ref, push, onValue, query, orderByChild } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 
 // Konfigurasi Firebase
 const firebaseConfig = {
@@ -14,9 +14,8 @@ const firebaseConfig = {
 };
 
 // Inisialisasi Firebase
-export const app = initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 // Export helper Firebase
-export { db, ref, push, onValue, query, orderByChild, get };
-
+export { db, ref, push, onValue, query, orderByChild };
