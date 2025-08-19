@@ -56,6 +56,7 @@ form.addEventListener('submit', async (e) => {
     let data = Object.fromEntries(new FormData(form).entries());
 
     const nikCleaned = data.nik.replace(/^0+/, ""); // hapus nol di depan
+    
     if (!karyawanMap[nikCleaned]) {
       modalError("NIK tidak ditemukan di database!");
       btn.disabled = false;
