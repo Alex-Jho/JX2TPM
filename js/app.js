@@ -245,6 +245,10 @@ nikInput.addEventListener("input", () => {
     }
 
     const nikCleaned = nik.replace(/^0+/, ""); // hapus nol di depan
+
+    console.log("Input NIK:", nik, "Cleaned:", nikCleaned);
+    console.log("karyawanMap:", karyawanMap);
+    
     if (karyawanMap[nikCleaned]) {
         nikWarning.style.display = "none";
     }
