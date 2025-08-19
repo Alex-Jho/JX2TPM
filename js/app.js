@@ -158,6 +158,8 @@ function isFilterActiveTopMesin() {
 //FIREBASE LISTENER
 onValue(ref(db, "karyawan"), snapshot => {
     karyawanMap = snapshot.val() || {};
+    console.log("✅ Data karyawan terload:", karyawanMap);
+    console.log("🔑 Keys:", Object.keys(karyawanMap));
 });
 
 onValue(ref(db, "idMesinList"), snapshot => {
@@ -175,23 +177,25 @@ function listenDowntime(bulanNode) {
 
   const q = query(ref(db, `downtime/${bulanNode}`), orderByChild("tanggal"));
   onValue(q, snapshot => {
-    allData.length = 0; // reset biar gak dobel
-    if (snapshot.exists()) {
-      snapshot.forEach(child => {
-        const val = child.val();
-        allData.push({
-          ...val,
-          id: child.key
-        });
-      });
-    }
 
-    console.log("Ambil data dari node:", bulanNode);
-    console.log("Jumlah data:", allData.length);
-    console.log("Isi data:", allData);
-    console.log("NIK input:", data.nik, "NIK cleaned:", nikCleaned);
-    console.log("karyawanMap keys:", Object.keys(karyawanMap));
-    console.log("Data karyawan terload:", karyawanMap);
+    allData.length = 0; // reset biar gak dobel
+
+    if (!snapshot.exists()) {
+      console.warn("Tidak ada data untuk", bulanNode);
+      allData.length = 0;
+      renderTable([]);
+      renderSummaryMekanik([]);
+      renderTopIdMesin([]);
+      return;
+    }
+      
+    snapshot.forEach(child => {
+      const val = child.val();
+      allData.push({
+        ...val,
+        id: child.key
+      });
+    });
 
     renderTable(allData);
     renderSummaryMekanik();
