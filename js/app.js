@@ -74,9 +74,6 @@ form.addEventListener('submit', async (e) => {
     data.nik = nikCleaned;
     data.nik = String(Number(data.nik));
 
-    console.log("NIK input:", data.nik, "NIK cleaned:", nikCleaned);
-    console.log("karyawanMap keys:", Object.keys(karyawanMap));
-
     // ===== VALIDASI WAKTU MULAI & SELESAI =====
     const [hMulai, mMulai] = data.mulai.split(":").map(Number);
     const [hSelesai, mSelesai] = data.selesai.split(":").map(Number);
@@ -161,7 +158,6 @@ function isFilterActiveTopMesin() {
 //FIREBASE LISTENER
 onValue(ref(db, "karyawan"), snapshot => {
     karyawanMap = snapshot.val() || {};
-    console.log("Data karyawan terload:", karyawanMap);
 });
 
 onValue(ref(db, "idMesinList"), snapshot => {
@@ -193,6 +189,9 @@ function listenDowntime(bulanNode) {
     console.log("Ambil data dari node:", bulanNode);
     console.log("Jumlah data:", allData.length);
     console.log("Isi data:", allData);
+    console.log("NIK input:", data.nik, "NIK cleaned:", nikCleaned);
+    console.log("karyawanMap keys:", Object.keys(karyawanMap));
+    console.log("Data karyawan terload:", karyawanMap);
 
     renderTable(allData);
     renderSummaryMekanik();
