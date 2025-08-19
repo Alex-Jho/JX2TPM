@@ -1,6 +1,4 @@
-import { db, ref, push, onValue, query, orderByChild, get } from "./firebase.js";
-
-
+import { db, ref, push, onValue, query, orderByChild } from "./firebase.js";
 
 let allData = [];
 let currentFilteredData = null;
@@ -163,20 +161,6 @@ onValue(ref(db, "karyawan"), snapshot => {
     console.log("✅ Data karyawan terload:", karyawanMap);
     console.log("🔑 Keys:", Object.keys(karyawanMap));
 });
-
-import { db, ref, get } from "./firebase.js";
-
-get(ref(db, "karyawan"))
-  .then(snap => {
-    if (snap.exists()) {
-      console.log("✅ Isi node karyawan (get):", snap.val());
-    } else {
-      console.warn("⚠️ Node 'karyawan' kosong di Firebase!");
-    }
-  })
-  .catch(err => {
-    console.error("❌ Error ambil node karyawan:", err);
-  });
 
 onValue(ref(db, "idMesinList"), snapshot => {
     idMesinList = [];
