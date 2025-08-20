@@ -323,6 +323,10 @@ function resetFilterTabel() {
 }
 
 function applyGrafikFilter() {
+    if (!document.getElementById('grafik').classList.contains('active')) {
+        return;
+    }
+  
     if (allData.length === 0) return;
 
     const from = document.getElementById("filterGrafikFrom").value;
@@ -831,3 +835,4 @@ function renderSummaryMekanik(filteredData = null) {
             btnReset.addEventListener("click", resetForm);
         }
     });
+
