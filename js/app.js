@@ -1,4 +1,4 @@
-import { db, ref, push, onValue, query, orderByChild } from "./firebase.js";
+import { db, ref, push, onValue, query, orderByChild, auth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "./firebase.js";
 
 let allData = [];
 let currentFilteredData = null;
@@ -11,6 +11,12 @@ const tableBody = document.querySelector("#dataTable tbody");
 const nikInput = document.querySelector('input[name="nik"]');
 const nikWarning = document.getElementById("nikWarning");
 const form = document.getElementById('downtimeForm');
+
+const loginForm = document.getElementById("loginForm");
+const loginError = document.getElementById("loginError");
+const showLoginLink = document.getElementById("showLoginLink");
+const menuLogin = document.getElementById("menuLogin");
+const menuLogout = document.getElementById("menuLogout");
 
 function toast(icon, title) {
   Swal.fire({
@@ -326,7 +332,7 @@ function applyGrafikFilter() {
     if (!document.getElementById('grafik').classList.contains('active')) {
         return;
     }
-  
+
     if (allData.length === 0) return;
 
     const from = document.getElementById("filterGrafikFrom").value;
@@ -810,6 +816,69 @@ function renderSummaryMekanik(filteredData = null) {
       return value ? parseFloat(value) : 0;  // Jika kosong, return 0
     }
 
+  // LOGIN
+  if (loginForm) {
+    loginForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value.trim();
+
+      signInWithEmailAndPassword(auth, email, password)
+        .then(() => {
+          loginError.style.display = "none";
+          Swal.fire({
+            icon: "success",
+            title: "Login berhasil!",
+            text: "Selamat datang kembali 👋",
+            timer: 2000,
+            showConfirmButton: false
+          });
+
+          // pindah ke menu petunjuk
+          showSection("petunjuk");
+        })
+        .catch((err) => {
+          loginError.style.display = "block";
+          loginError.innerText = "❌ " + err.message;
+        });
+    });
+  }
+
+  // CEK STATUS LOGIN
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // ✅ User login
+      document.querySelectorAll(".section").forEach(sec => sec.classList.remove("active"));
+      document.getElementById("petunjuk").classList.add("active");
+
+      // sembunyikan form login & register
+      document.getElementById("login").style.display = "none";
+
+      // Tampilkan menu Logout
+      menuLogin.style.display = "none";
+      menuLogout.style.display = "block";
+
+    } else {
+        // ❌ User logout
+        document.querySelectorAll(".section").forEach(sec => sec.classList.remove("active"));
+        document.getElementById("login").classList.add("active");
+
+        // tampilkan form login
+        document.getElementById("login").style.display = "block";
+
+        // Tampilkan menu Login
+        menuLogin.style.display = "block";
+        menuLogout.style.display = "none";
+
+      }
+  });
+
+  // LOGOUT
+  menuLogout.addEventListener("click", () => {
+    signOut(auth);
+    Swal.fire("Anda sudah logout!");
+  });
+
     window.applyFilter = applyFilter;
     window.applyGrafikFilter = applyGrafikFilter;
     window.applySummaryFilter = applySummaryFilter;
@@ -835,4 +904,3 @@ function renderSummaryMekanik(filteredData = null) {
             btnReset.addEventListener("click", resetForm);
         }
     });
-
