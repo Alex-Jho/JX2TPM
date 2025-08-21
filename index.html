@@ -9,6 +9,7 @@
   <script type="module" src="./js/ui.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -55,6 +56,14 @@
       <li onclick="showSection('petunjuk')">
         <span class="bi bi-info-circle"></span>
         <span class="menu-text">Petunjuk Pengguna</span>
+      </li>
+      <li onclick="showSection('login')" id="menuLogin">
+        <span class="bi bi-box-arrow-in-right"></span>
+        <span class="menu-text">Login</span>
+      </li>
+      <li id="menuLogout" style="display:none;">
+        <span class="bi bi-box-arrow-right"></span>
+        <span class="menu-text">Logout</span>
       </li>
     </ul>
   </div>
@@ -342,28 +351,66 @@
         </div>
     </section>
     <!-- SECTION PETUNJUK PENGGUNA -->
-    <section id="petunjuk" class="section active">
-      <h2>Petunjuk Pengguna</h2>
-      <p>Berikut adalah panduan penggunaan aplikasi untuk memantau dan mengelola downtime mesin:</p>
-        <ul>
-          <li><strong>Input Data Downtime:</strong> untuk mencatat data downtime mesin.</li>
-          <li><strong>Cek Data Downtime:</strong> untuk melihat semua data downtime yang sudah diinput.</li>
-          <li><strong>Tabel:</strong> Untuk monitoring data downtime berdasarkan Nama Mekanik, Tanggal, Factory, dan Area.</li>
-          <li><strong>Grafik:</strong> Untuk analisa data downtime secara visual berdasarkan Tanggal.</li>
-          <li><strong>Summary:</strong> Untuk monitoring input data oleh mekanik berdasarkan Nama Mekanik dan Tanggal.</li>
-          <li><strong>Top ID Mesin:</strong> Untuk monitoring data mesin yang paling sering rusak, berdasarkan Tanggal.</li>
-        </ul>
-      <p>Tersedia juga fitur tambahan untuk simulasi hitung gaji dan cek overtime:</p>
-        <ul>
-          <li><strong>Cek Gaji Bruto:</strong> Menu ini digunakan untuk melihat pendapatan bruto (Belum termasuk potongan).</li>
-          <li><strong>Cek Overtime:</strong> Menu ini digunakan untuk melihat data lemburan karyawan.</li>
-          <li><strong>Petunjuk Pengguna:</strong> Gunakan sidebar di sebelah kiri untuk berpindah antar menu.</li>
-        </ul>
-      <p>Harap perhatikan saat input <strong>waktu mulai</strong> dan  <strong>waktu selesai.</strong></p>
-      <p>Pastikan Anda selalu menginput data dengan benar agar laporan downtime akurat.</p>
-      <p>Jika ada kendala penggunaan aplikasi, silahkan laporkan ke bagian TPM.</p>
+    <section id="petunjuk" class="section">
+      <h2>📖 Petunjuk Pengguna</h2>
+      <p>Aplikasi ini digunakan untuk memantau dan mengelola downtime mesin, serta simulasi gaji.</p>
+
+      <div class="accordion">
+        <div class="accordion-item">
+          <button class="accordion-header">Input Data Downtime</button>
+          <div class="accordion-body">
+            <p>Menu ini digunakan untuk mencatat data downtime mesin, meliputi NIK, factory, area, ID mesin, masalah, tindakan, sparepart, serta waktu mulai dan selesai.</p>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <button class="accordion-header">Cek Data Downtime</button>
+          <div class="accordion-body">
+            <ul>
+              <li><strong>Tabel:</strong> Monitoring data downtime berdasarkan Nama Mekanik, Tanggal, Factory, dan Area.</li>
+              <li><strong>Grafik:</strong> Analisa data downtime secara visual berdasarkan Tanggal.</li>
+              <li><strong>Summary:</strong> Monitoring input data downtime per Mekanik.</li>
+              <li><strong>Top ID Mesin:</strong> Menampilkan ID mesin yang paling sering rusak.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <button class="accordion-header">Simulasi Gaji</button>
+          <div class="accordion-body">
+            <p>Menu ini digunakan untuk menghitung <strong>Gaji Bruto</strong> (belum termasuk potongan) berdasarkan gaji pokok, tunjangan, lembur, dan insentif.</p>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <button class="accordion-header">Petunjuk Umum</button>
+          <div class="accordion-body">
+            <ul>
+              <li>Gunakan sidebar di sebelah kiri untuk berpindah antar menu.</li>
+              <li>Pastikan input <strong>Waktu Mulai</strong> dan <strong>Waktu Selesai</strong> benar.</li>
+              <li>Jika ada kendala penggunaan aplikasi, silakan hubungi bagian TPM.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- SECTION LOGIN -->
+    <section id="login" class="section active">
+      <h2>Login</h2>
+      <form id="loginForm">
+        <input type="email" id="loginEmail" placeholder="Email" required>
+
+        <div class="password-wrapper">
+          <input type="password" id="loginPassword" placeholder="Password" required>
+          <span class="toggle-password" onclick="togglePassword('loginPassword', this)">
+            <i class="bi bi-eye"></i>
+          </span>
+        </div>
+
+        <button type="submit">Login</button>
+      </form>
+      <p id="loginError" style="color:red;display:none;">Email atau password salah</p>
     </section>
   </div>
 </body>
 </html>
-
