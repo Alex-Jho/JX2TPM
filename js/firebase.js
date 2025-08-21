@@ -1,7 +1,7 @@
 // firebase.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 import { getDatabase, ref, push, onValue, query, orderByChild } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
-
+import {  getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 // Konfigurasi Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyDut3AnvIY81bzkZT8vTRVrU5-9zXIJSFo",
@@ -16,6 +16,10 @@ const firebaseConfig = {
 // Inisialisasi Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+const auth = getAuth(app);
 
 // Export helper Firebase
-export { db, ref, push, onValue, query, orderByChild };
+export { 
+  db, ref, push, onValue, query, orderByChild, 
+  auth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail
+};
