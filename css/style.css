@@ -9,6 +9,65 @@
       display: flex;
     }
 
+    #login {
+      max-width: 400px;
+      margin: 60px auto;
+      padding: 30px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    #login input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    #login button {
+      width: 100%;
+      background: linear-gradient(135deg, #007bff, #00bfff);
+      color: white;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    #login button:hover {
+      background: linear-gradient(135deg, #0056b3, #009acd);
+    }
+
+    .password-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    .password-wrapper input {
+      width: 100%;
+      padding-right: 40px; /* ruang untuk ikon */
+    }
+
+    .password-wrapper .toggle-password {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 18px;
+      color: #555;
+    }
+
+    .password-wrapper .toggle-password:hover {
+      color: #000;
+    }
+
     #toggleSidebar {
       position: fixed;
       top: 12px;
@@ -196,6 +255,14 @@
       margin: 4px 0;
       color: #334155;
       font-size: 14px;
+    }
+
+    #menuLogout {
+      color: #ff5252;
+    }
+
+    #menuLogout:hover {
+      background: rgba(255, 82, 82, 0.2);
     }
 
     #summaryContainer, #topIdMesinContainer {
@@ -424,6 +491,80 @@
       padding: 8px;
       border: 1px solid #ddd;
       text-align: left;
+    }
+
+    .loader {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #3498db;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      animation: spin 0.8s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+      margin-left: 6px;
+    }
+
+    .accordion {
+      margin-top: 20px;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .accordion-item {
+      border-bottom: 1px solid #ddd;
+    }
+
+    .accordion-header {
+      width: 100%;
+      text-align: left;
+      padding: 14px 16px;
+      background: #6a9cce;
+      font-size: 15px;
+      font-weight: bold;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .accordion-header:hover {
+      background: #e9f2ff;
+    }
+
+    .accordion-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.25s ease;
+      background: #fff;
+      padding: 0 16px;
+    }
+
+    .accordion-body p,
+    .accordion-body ul {
+      font-size: 14px;
+      color: #333333bb;
+      margin: 12px 0;
+    }
+
+    .accordion-item.active .accordion-body {
+      max-height: 400px; /* cukup besar biar muat semua isi */
+      padding: 12px 16px;
+    }
+
+    .accordion-item.active .accordion-header {
+      background: #357ce6;
+      color: #fff;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* opsional: tombol saat loading */
+    button[aria-busy="true"] {
+      opacity: .8;
+      pointer-events: none;
     }
 
     /* Responsive Sidebar Mobile */
