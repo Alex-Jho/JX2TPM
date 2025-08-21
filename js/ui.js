@@ -1,6 +1,38 @@
+import { auth } from "./firebase.js";
+
 function showSection(id) {
+    const user = auth.currentUser;
+
+    // Kalau belum login → hanya bisa lihat login & register
+    if (!user && id !== "login") {
+        id = "login";
+    }
+
+    // kalau sudah login, jangan izinkan balik ke login/register
+    if (user && (id === "login")) {
+        id = "petunjuk";
+    }
+
     document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
+    const targetSection = document.getElementById(id);
+    if (targetSection) {
+        targetSection.classList.add("active");
+    }
+}
+
+function togglePassword(inputId, el) {
+  const input = document.getElementById(inputId);
+  const icon = el.querySelector("i");
+
+  if (input.type === "password") {
+    input.type = "text";
+    icon.classList.remove("bi-eye");
+    icon.classList.add("bi-eye-slash");
+  } else {
+    input.type = "password";
+    icon.classList.remove("bi-eye-slash");
+    icon.classList.add("bi-eye");
+  }
 }
 
 function toggleSubmenu() {
@@ -44,5 +76,20 @@ overlay.addEventListener("click", () => {
     sidebar.classList.remove("active");
 });
 
+document.querySelectorAll(".accordion-header").forEach(btn => {
+  btn.addEventListener("click", function () {
+    const item = this.parentElement;
+    item.classList.toggle("active");
+
+    // Tutup accordion lain (jika hanya mau satu terbuka)
+    document.querySelectorAll(".accordion-item").forEach(other => {
+      if (other !== item) {
+        other.classList.remove("active");
+      }
+    });
+  });
+});
+
 window.showSection = showSection;
 window.toggleSubmenu = toggleSubmenu;
+window.togglePassword = togglePassword;
